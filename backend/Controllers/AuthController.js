@@ -29,7 +29,7 @@ const loginUser = async (req, res) => {
         if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
 
         const validPassword = await user.comparePassword(req.body.password);
-        if (!validPassword) return res.status(401).json({ message: 'Mot de passe incorrect' });
+        if (!validPassword) return res.status(401).json({ message: 'Utilisateur non trouvé' });
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(200).json({ message: 'Connexion réussie', token });

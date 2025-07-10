@@ -5,4 +5,4 @@ npm install -g nodemon
 nodemon index.js
 --frontend
 npm install --force
-npm start
+npm run dev

@@ -111,7 +111,7 @@ const Navbar = () => {
     );
 
     return (
-        <nav className=" z-50 flex items-center justify-between h-16 px-4 bg-white text-dark-gray shadow-md">
+<nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between h-16 px-4 bg-white text-dark-gray shadow-md">
             {/* App Title */}
             <div className={`flex ml-2 items-center transition-all duration-300 ${searchExpanded ? 'hidden' : 'flex'} md:flex`}>
                 <Link to="/" className="text-xl font-semibold primary-cl-cl">

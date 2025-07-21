@@ -59,10 +59,10 @@ export default function ComptesList() {
     <div className="max-w-4xl mx-auto mt-10 px-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Liste des Comptes Comptables</h1>
-        <button
-          onClick={handleAdd}
-          className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-light transition"
-        >
+      <button
+  onClick={handleAdd}
+  className="bg-[var(--primary)] text-white px-4 py-2 rounded hover:bg-[var(--primary-light)] transition"
+>
           + Ajouter un Compte
         </button>
       </div>

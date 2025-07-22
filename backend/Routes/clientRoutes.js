@@ -14,9 +14,9 @@ router.get('/', async (req, res) => {
       ? {
           $or: [
             { code: { $regex: search, $options: 'i' } },
-            { client: { $regex: search, $options: 'i' } },
-            { matricule: { $regex: search, $options: 'i' } },
-            { contact: { $regex: search, $options: 'i' } },
+            { rsoc: { $regex: search, $options: 'i' } },
+            { mf: { $regex: search, $options: 'i' } },
+            { tel: { $regex: search, $options: 'i' } },
           ],
         }
       : {};

@@ -3,7 +3,7 @@ import { UserCheck, UserPlus } from "lucide-react";
 export default function ClientForm({ onSubmit, client, onCancel, isEdit = false }) {
   const [form, setForm] = useState({
     code: "",
-    respercon1: "",
+    rsoc: "",
     mf: "",
     tel: "",
   });
@@ -66,8 +66,8 @@ export default function ClientForm({ onSubmit, client, onCancel, isEdit = false 
             <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
             <input
               type="text"
-              name="respercon1"
-              value={form.respercon1}
+              name="rsoc"
+              value={form.rsoc}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"

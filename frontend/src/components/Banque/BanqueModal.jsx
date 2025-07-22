@@ -20,13 +20,13 @@ const generateNextCode = (banques) => {
 };
 
 export default function BanqueModal({ open, onClose, onSubmit, banque, banques }) {
-  const [form, setForm] = useState({ code: "", libelle: "" });
+  const [form, setForm] = useState({ code: "", libelle: "" , numcompte: ""});
   const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!banque) {
       const nextCode = generateNextCode(banques);
-      setForm({ code: nextCode, libelle: "" });
+      setForm({ code: nextCode, libelle: "", numcompte: "" });
     } else {
       setForm(banque);
     }
@@ -96,6 +96,18 @@ export default function BanqueModal({ open, onClose, onSubmit, banque, banques }
               name="libelle"
               placeholder="Libellé"
               value={form.libelle}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+          </div>
+                    <div className="mb-6">
+            <label className="block text-gray-700 mb-1">Num Compte</label>
+            <input
+              type="text"
+              name="numcompte"
+              placeholder="Num Compte"
+              value={form.numcompte}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
               required

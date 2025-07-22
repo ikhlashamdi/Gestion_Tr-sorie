@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
             { code: { $regex: search, $options: 'i' } },
             { rsoc: { $regex: search, $options: 'i' } },
             { adresse: { $regex: search, $options: 'i' } },
+            { tel: { $regex: search, $options: 'i' } },
           ],
         }
       : {};

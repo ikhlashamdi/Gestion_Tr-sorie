@@ -40,8 +40,8 @@ export default function ClientTable({
 
       {/* Filtres + Ajout */}
       {showHeader && (
-        <div className="flex justify-between items-center px-4 mt-6">
-          <h3 className="text-lg font-semibold text-gray-800">Recherche et filtres</h3>
+         <div className="flex justify-between items-center px-4 mt-2">
+          <h3 className="text-lg font-semibold text-gray-600">Recherche et filtres</h3>
           <button
             onClick={onAdd}
             className="bg-[var(--primary)] text-white px-4 py-2 rounded hover:bg-[var(--primary-light)] transition"
@@ -68,7 +68,7 @@ export default function ClientTable({
 
       {/* Nombre de résultats */}
       {showHeader && (
-        <div className="mt-4 text-gray-600 font-bold">
+        <div className="mt-4 text-gray-600 font-semibold px-4">
           Liste des Clients ({clients.length})
         </div>
       )}
@@ -101,7 +101,7 @@ export default function ClientTable({
                   } hover:bg-[var(--primary-light)/10]`}
                 >
                   <td className="py-3 px-4">{client.code}</td>
-                  <td className="py-3 px-4">{client.respercon1}</td>
+                  <td className="py-3 px-4">{client.rsoc}</td>
                   <td className="py-3 px-4">{client.mf}</td>
                   <td className="py-3 px-4">{client.tel}</td>
                   <td className="py-3 px-4 text-center">

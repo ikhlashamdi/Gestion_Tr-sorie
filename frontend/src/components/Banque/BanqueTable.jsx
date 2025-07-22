@@ -58,7 +58,7 @@ export default function BanqueTable({
           <Search className="text-gray-500" />
           <input
             type="text"
-            placeholder="Rechercher par code ou libellé..."
+            placeholder="Rechercher par code, libellé ou num compte..."
             value={searchTerm}
             onChange={handleSearch}
             className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
@@ -80,6 +80,7 @@ export default function BanqueTable({
             <tr className="bg-[var(--primary-light)] text-white">
               <th className="py-3 px-4 text-left">Code Banque</th>
               <th className="py-3 px-4 text-left">Libellé</th>
+              <th className="py-3 px-4 text-left">Num Compte</th>
               <th className="py-3 px-4 text-center">Actions</th>
             </tr>
           </thead>
@@ -100,6 +101,7 @@ export default function BanqueTable({
                 >
                   <td className="py-3 px-4">{banque.code}</td>
                   <td className="py-3 px-4">{banque.libelle}</td>
+                  <td className="py-3 px-4">{banque.numcompte}</td>
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => onEdit(banque)}

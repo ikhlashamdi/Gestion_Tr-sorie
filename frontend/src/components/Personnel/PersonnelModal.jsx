@@ -1,111 +1,133 @@
-import React, { useState } from "react";
-import { Pencil, Trash2, Plus, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { X } from "lucide-react";
 
-export default function PersonnelTable({ personnels, onEdit, onDelete, onAdd, onSearch }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
+// Générer le prochain code automatiquement (ex: PR01, PR02)
+const generateNextCode = (personnels) => {
+  if (!personnels || personnels.length === 0) {
+    return "PR01";
+  }
 
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    onSearch(value);
+  const codes = personnels
+    .map((p) => p.code)
+    .filter((code) => /^PR\d+$/.test(code));
+
+  if (codes.length === 0) return "PR01";
+
+  const maxNumber = Math.max(
+    ...codes.map((code) => parseInt(code.replace("PR", ""), 10))
+  );
+
+  const nextNumber = (maxNumber + 1).toString().padStart(2, "0");
+  return `PR${nextNumber}`;
+};
+
+export default function PersonnelModal({
+  open,
+  onClose,
+  onSubmit,
+  personnel,
+  personnels
+}) {
+  const [form, setForm] = useState({ code: "", libelle: "" });
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (!personnel) {
+      const nextCode = generateNextCode(personnels);
+      setForm({ code: nextCode, libelle: "" });
+    } else {
+      setForm(personnel);
+    }
+  }, [personnel, open, personnels]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const val = name === "code" ? value.toUpperCase() : value;
+    setForm((prev) => ({ ...prev, [name]: val }));
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const isDuplicate = (personnels || []).some(
+      (p) => p.code === form.code && p._id !== personnel?._id
+    );
+
+    if (isDuplicate) {
+      alert("Ce code existe déjà !");
+      return;
+    }
+
+    onSubmit(form);
+  };
+
+  const handleBackdropClick = (e) => {
+    if (dialogRef.current && !dialogRef.current.contains(e.target)) {
+      onClose();
+    }
+  };
+
+  if (!open) return null;
+
   return (
-    <div className="w-full mt-10 px-6">
-      {/* Header + Breadcrumb */}
-      <div className="bg-white px-6 py-4 rounded-lg shadow flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-800">Gestion des Personnels</h1>
-        <div className="text-sm text-gray-500">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="bg-gray-100 px-3 py-1 rounded text-gray-700 hover:text-gray-900 hover:bg-gray-200 transition"
-          >
-            Tableau de bord
-          </button>
-          <span className="mx-1">/</span>
-          <span className="text-gray-500">Personnels</span>
-        </div>
-      </div>
-
-      {/* Titre + bouton */}
-      <div className="flex justify-between items-center px-4 mt-2">
-        <h3 className="text-lg font-semibold text-gray-600">Recherche et filtres</h3>
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center bg-black/30"
+      onMouseDown={handleBackdropClick}
+    >
+      <div
+        ref={dialogRef}
+        className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <button
-          onClick={onAdd}
-          className="bg-[var(--primary)] text-white px-4 py-2 rounded hover:bg-[var(--primary-light)] transition"
+          className="absolute top-2 right-2 text-gray-400 hover:text-[var(--danger)] transition-colors"
+          onClick={onClose}
+          aria-label="Fermer"
         >
-          <Plus size={16} className="inline mr-1" />
-          Nouveau Personnel
+          <X size={24} />
         </button>
-      </div>
-
-      {/* Barre de recherche */}
-      <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-b-md shadow mt-2">
-        <Search className="text-gray-500" />
-        <input
-          type="text"
-          placeholder="Rechercher par code ou libellé..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-        />
-      </div>
-
-      {/* Nombre de résultats */}
-      <div className="mt-4 text-gray-600 font-semibold px-4">
-        Liste des Personnels ({personnels.length})
-      </div>
-
-      {/* Tableau */}
-      <div className="overflow-x-auto mt-4">
-        <table className="min-w-full bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
-          <thead>
-            <tr className="bg-[var(--primary-light)] text-white">
-              <th className="py-3 px-4 text-left">Code</th>
-              <th className="py-3 px-4 text-left">Libellé</th>
-              <th className="py-3 px-4 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {personnels.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="py-6 text-center text-gray-400">
-                  Aucun personnel trouvé.
-                </td>
-              </tr>
-            ) : (
-              personnels.map((personnel, idx) => (
-                <tr
-                  key={personnel._id}
-                  className={`transition-colors ${
-                    idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  } hover:bg-[var(--primary-light)/10]`}
-                >
-                  <td className="py-3 px-4">{personnel.code}</td>
-                  <td className="py-3 px-4">{personnel.libelle}</td>
-                  <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => onEdit(personnel)}
-                      className="inline-flex items-center justify-center p-2 rounded hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
-                      title="Modifier"
-                    >
-                      <Pencil size={20} />
-                    </button>
-                    <button
-                      onClick={() => onDelete(personnel._id)}
-                      className="inline-flex items-center justify-center p-2 rounded hover:bg-red-50 text-red-600 hover:text-red-800 transition ml-2"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          {personnel ? "Modifier Personnel" : "Ajouter Personnel"}
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-1">Code</label>
+            <input
+              type="text"
+              name="code"
+              value={form.code}
+              readOnly
+              className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-600"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-1">Libellé</label>
+            <input
+              type="text"
+              name="libelle"
+              value={form.libelle}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              className="bg-[var(--primary)] text-white px-4 py-2 rounded hover:bg-[var(--primary-light)] transition"
+            >
+              {personnel ? "Modifier" : "Créer"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

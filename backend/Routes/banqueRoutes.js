@@ -10,6 +10,7 @@ router.get('/', async (req, res) => {
           $or: [
             { code: { $regex: search, $options: 'i' } },
             { libelle: { $regex: search, $options: 'i' } },
+             { numcompte: { $regex: search, $options: 'i' } },
           ],
         }
       : {};

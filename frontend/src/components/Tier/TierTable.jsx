@@ -40,7 +40,7 @@ export default function TierTable({
 
       {/* Recherche + bouton ajout */}
       {showHeader && (
-        <div className="flex justify-between items-center px-4 mt-2">
+         <div className="flex justify-between items-center px-4 mt-2">
           <h3 className="text-lg font-semibold text-gray-600">Recherche et filtres</h3>
           <button
             onClick={onAdd}

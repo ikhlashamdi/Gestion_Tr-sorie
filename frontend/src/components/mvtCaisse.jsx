@@ -73,6 +73,21 @@ export default function MvtCaisseForm() {
       default: return tiers;
     }
   };
+  const getLibelle = (item) => {
+  switch (activeTierTab) {
+    case "fournisseurs":
+    case "clients":
+      return item.rsoc;
+   
+    case "banque":
+    case "personnel":
+    case "vehicule":
+    case "tiers":
+    default:
+      return item.libelle;
+  }
+};
+
 
   const handleSubmit = async () => {
     if (!caisse || !natureCharge || !selectedTier) {
@@ -189,7 +204,8 @@ export default function MvtCaisseForm() {
             {getCurrentTierList().map((item) => (
               <tr key={item.code} className={selectedTier?.code === item.code ? "bg-green-100" : ""}>
                 <td className="px-4 py-2">{item.code}</td>
-                <td className="px-4 py-2">{item.libelle}</td>
+               <td className="px-4 py-2">{getLibelle(item)}</td>
+
                 <td className="px-4 py-2 text-center">
                   <button
                     onClick={() => setSelectedTier(item)}

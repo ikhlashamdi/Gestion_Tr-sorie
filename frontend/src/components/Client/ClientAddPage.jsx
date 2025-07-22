@@ -18,7 +18,7 @@ export default function ClientAddPage() {
           return num > acc ? num : acc;
         }, 0);
         const newCode = `CL-${String(max + 1).padStart(2, "0")}`;
-        setInitialClient({ code: newCode, respercon1: "", mf: "", tel: "" });
+        setInitialClient({ code: newCode, rsoc: "", mf: "", tel: "" });
       } catch (err) {
         console.error("Erreur génération code client :", err);
       }

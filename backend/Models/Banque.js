@@ -8,7 +8,7 @@ const banqueSchema = new mongoose.Schema({
         required: true
     },
       numcompte: { type: String, required: true },           
-  codeb: { type: String, required: true },               
+               
   description: { type: String },                         
   soldeinit: { type: Number, default: 0.000 },           
   respece: { type: Number, default: 0.000 },

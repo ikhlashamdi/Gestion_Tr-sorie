@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-// 🔢 Générer le prochain code automatique
+
 const generateNextCode = (natureCharges) => {
   if (!natureCharges || natureCharges.length === 0) {
     return "NC01";

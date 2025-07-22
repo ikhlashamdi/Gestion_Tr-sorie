@@ -1,12 +1,10 @@
-import Layout from '../components/common/Layout.jsx'
-import BarChartLayout from '../components/common/BarChart.jsx'
+import Layout from "../components/common/Layout";
+import MvtCaisseForm from "../components/mvtCaisse";
 
-const mvtCaisse = () => {
-    return (
-        <Layout>
-            <BarChartLayout className='mt-[var(--nav-height)]' />
-        </Layout>
-    )
+export default function MvtCaisse() {
+  return (
+    <Layout>
+      <MvtCaisseForm />
+    </Layout>
+  );
 }
-
-export default mvtCaisse

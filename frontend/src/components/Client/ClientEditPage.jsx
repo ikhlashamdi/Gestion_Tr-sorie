@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ClientForm from "./ClientForm";
-import Layout from "../common/Layout"; // ← Ajoute l'import du Layout
+import Layout from "../common/Layout"; 
 
 export default function ClientEditPage() {
   const { id } = useParams();

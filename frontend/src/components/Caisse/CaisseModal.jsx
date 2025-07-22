@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-// 🔢 Générer automatiquement le prochain code
+
 const generateNextCode = (caisses) => {
   if (!caisses || caisses.length === 0) return "CA01";
 

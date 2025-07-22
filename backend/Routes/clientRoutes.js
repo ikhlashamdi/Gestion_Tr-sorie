@@ -62,7 +62,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// ✅ Supprimer un client
+
 router.delete('/:id', async (req, res) => {
   try {
     const client = await Client.findByIdAndDelete(req.params.id);

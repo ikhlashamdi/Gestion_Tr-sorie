@@ -16,6 +16,11 @@ import ModifierFournisseur from './components/Fournisseur/ModifierFournisseur.js
 import AjouterFournisseur from './components/Fournisseur/AjouterFournisseur.jsx';
 import Fournisseur from './pages/fournisseur.jsx';
 import MouvementCaissePage from './components/mvtCaisse.jsx';
+import MvtCaisse from './pages/mvtCaisse';
+
+
+
+
 
 const PrivateRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('token');
@@ -46,8 +51,7 @@ function App() {
       <Route path="/fournisseurs" element={<PrivateRoute><Fournisseur /></PrivateRoute>} />
       <Route path="/fournisseurs/ajouter" element={<AjouterFournisseur />} />
       <Route path="/fournisseurs/modifier/:id" element={<ModifierFournisseur />} />   
-      <Route path="/mvt-caisse" element={<PrivateRoute><MouvementCaissePage /></PrivateRoute>} />
-   
+     <Route path="/mvt-caisse" element={<MvtCaisse />} />     
 
 
 

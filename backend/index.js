@@ -37,6 +37,7 @@ app.use('/api/vehicules', vehiculeRoutes);
 app.use('/api/banques', banqueRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/fournisseurs', fournisseurRoutes);
+app.use('/api/mouvements', require('./Routes/mouvementRoutes'));
 
 // ✅ Démarrer le serveur
 const PORT = process.env.PORT || 5000;

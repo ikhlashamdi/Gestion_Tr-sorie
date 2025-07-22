@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-// Fonction pour générer automatiquement le prochain code
+
 const generateNextCode = (tiers) => {
   if (!tiers || tiers.length === 0) return "TI01";
 

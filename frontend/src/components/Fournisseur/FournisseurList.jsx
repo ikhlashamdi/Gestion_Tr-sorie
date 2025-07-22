@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import FournisseurTable from "./fournisseurTable";
+import FournisseurTable from "./FournisseurTable";
 
 export default function FournisseurList() {
   const [fournisseurs, setFournisseurs] = useState([]);
@@ -13,7 +13,7 @@ export default function FournisseurList() {
       const response = await axios.get(`http://localhost:5000/api/fournisseurs?search=${search}`);
       setFournisseurs(response.data);
     } catch (error) {
-      console.error("❌ Erreur récupération des fournisseurs :", error);
+      console.error(" Erreur récupération des fournisseurs :", error);
     }
   };
 
@@ -34,7 +34,7 @@ export default function FournisseurList() {
       await axios.delete(`http://localhost:5000/api/fournisseurs/${id}`);
       fetchFournisseurs();
     } catch (error) {
-      console.error("❌ Erreur suppression :", error);
+      console.error(" Erreur suppression :", error);
     }
   };
 

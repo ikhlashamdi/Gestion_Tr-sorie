@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-// Génère le prochain code unique au format BK01, BK02...
+
 const generateNextCode = (banques) => {
   if (!banques || banques.length === 0) return "BK01";
 

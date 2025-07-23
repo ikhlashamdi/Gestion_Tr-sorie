@@ -21,7 +21,7 @@ export default function CaisseTable({
 
   return (
     <div className="w-full mt-10 px-6">
-      {/* Header avec breadcrumb */}
+     
       {showHeader && (
         <div className="bg-white px-6 py-4 rounded-lg shadow flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-gray-800">Gestion des Caisses</h1>

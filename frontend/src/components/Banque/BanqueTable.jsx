@@ -21,7 +21,7 @@ export default function BanqueTable({
 
   return (
     <div className="w-full mt-10 px-6">
-      {/* Header avec breadcrumb */}
+ 
       {showHeader && (
         <div className="bg-white px-6 py-4 rounded-lg shadow flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-gray-800">Gestion des Banques</h1>
@@ -38,7 +38,7 @@ export default function BanqueTable({
         </div>
       )}
 
-      {/* Bouton + filtre */}
+
       {showHeader && (
         <div className="flex justify-between items-center px-4 mt-2">
           <h3 className="text-lg font-semibold text-gray-600">Recherche et filtres</h3>
@@ -52,7 +52,7 @@ export default function BanqueTable({
         </div>
       )}
 
-      {/* Barre de recherche */}
+
       {showHeader && (
         <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-b-md shadow mt-2">
           <Search className="text-gray-500" />
@@ -66,14 +66,13 @@ export default function BanqueTable({
         </div>
       )}
 
-      {/* Liste */}
+
       {showHeader && (
         <div className="mt-4 text-gray-600 font-semibold px-4">
           Liste des Banques ({banques.length})
         </div>
       )}
 
-      {/* Tableau */}
       <div className="overflow-x-auto mt-4">
         <table className="min-w-full bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
           <thead>

@@ -51,7 +51,7 @@ export default function JournalCaisse() {
     <div className="max-w-6xl mx-auto p-6 print:p-4">
       <h1 className="text-xl font-semibold mb-4 print:text-center">Journal de Caisse</h1>
 
-      {/* Filtres masqués à l'impression */}
+     
       <div className="flex gap-4 mb-6 items-end print:hidden">
         <div>
           <label className="block mb-1 font-medium">Du</label>
@@ -107,13 +107,13 @@ export default function JournalCaisse() {
         <p className="text-gray-500">Aucun mouvement trouvé pour cette période.</p>
       ) : (
         <div id="printable-journal">
-          {/* Édité le … (toujours visible) */}
+        
         <div className="hidden print:block text-right font-medium text-sm mb-1">
           {formatDateTimeNow()}
         </div>
 
 
-          {/* Impression uniquement : EXTRAIT CAISSE et période */}
+       
           <div className="hidden print:block text-center font-bold text-lg mt-6 mb-2">
             EXTRAIT CAISSE
           </div>
@@ -122,7 +122,7 @@ export default function JournalCaisse() {
             {new Date(endDate).toLocaleDateString("fr-FR")}
           </div>
 
-          {/* En-tête visible uniquement à l'écran */}
+        
           <h2 className="text-xl font-semibold mb-2  print:hidden">
             Liste des Mouvements
           </h2>

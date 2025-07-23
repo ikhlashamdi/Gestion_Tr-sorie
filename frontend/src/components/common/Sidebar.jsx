@@ -54,7 +54,7 @@ const Sidebar = () => {
     setCookie('dopen', dopen);
   }, [dopen]);
 
-  // Garder le sous-menu "Fiche de base" ouvert uniquement si on est sur l'une de ses routes
+
   useEffect(() => {
     const ficheBaseRoutes = [
       '/caisse',

@@ -27,18 +27,12 @@ export default function JournalCaisse() {
 
     setLoading(true);
     try {
-      const params = {
-        start: startDate,
-        end: endDate,
-      };
+      const params = { start: startDate, end: endDate };
       if (selectedCaisseCode) {
-        params.caisse = selectedCaisseCode; // Ici on filtre par code
+        params.caisse = selectedCaisseCode;
       }
 
-      const res = await axios.get("http://localhost:5000/api/mouvements", {
-        params,
-      });
-
+      const res = await axios.get("http://localhost:5000/api/mouvements", { params });
       setMouvements(res.data);
     } catch (err) {
       console.error("Erreur chargement journal :", err);
@@ -48,11 +42,17 @@ export default function JournalCaisse() {
     }
   };
 
-  return (
-    <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-xl font-semibold mb-4">Journal de Caisse</h1>
+  const formatDateTimeNow = () => {
+    const now = new Date();
+    return `Édité le ${now.toLocaleDateString("fr-FR")} à ${now.toLocaleTimeString("fr-FR")}`;
+  };
 
-      <div className="flex gap-4 mb-6 items-end">
+  return (
+    <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <h1 className="text-xl font-semibold mb-4 print:text-center">Journal de Caisse</h1>
+
+      {/* Filtres masqués à l'impression */}
+      <div className="flex gap-4 mb-6 items-end print:hidden">
         <div>
           <label className="block mb-1 font-medium">Du</label>
           <input
@@ -89,39 +89,75 @@ export default function JournalCaisse() {
         <button
           onClick={fetchJournal}
           disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           {loading ? "Chargement..." : "Rechercher"}
         </button>
+        {mouvements.length > 0 && (
+          <button
+            onClick={() => window.print()}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Imprimer
+          </button>
+        )}
       </div>
 
       {mouvements.length === 0 ? (
         <p className="text-gray-500">Aucun mouvement trouvé pour cette période.</p>
       ) : (
-       <table className="min-w-full border border-gray-300 rounded shadow overflow-hidden">
-  <thead className="bg-blue-600 text-white">
-    <tr>
-      <th className="px-4 py-2 text-left">Date</th>
-      <th className="px-4 py-2 text-left">Nature Charge</th>
-      <th className="px-4 py-2 text-left">Type Mouvement</th>
-      <th className="px-4 py-2 text-left">Tier Type</th>
-      <th className="px-4 py-2 text-left">Raison Sociale</th>
-      <th className="px-4 py-2 text-right">Montant</th>
-    </tr>
-  </thead>
-<tbody> 
-    {mouvements.map((mvt) => ( 
- <tr key={mvt._id} className="border-t border-gray-200 hover:bg-blue-50"> 
-        <td className="px-4 py-2">{new Date(mvt.date).toLocaleDateString()}</td> 
-        <td className="px-4 py-2">{mvt.natureCharge?.libelle || "-"}</td>
-         <td className="px-4 py-2">{mvt.typeMouvement || mvt.type || "-"}</td> 
-         <td className="px-4 py-2">{mvt.tierType || "-"}</td>
-         <td className="px-4 py-2"> {mvt.tier?.rsoc || mvt.tier?.libelle || "-"} </td> 
-         <td className="px-4 py-2 text-right">{mvt.montant?.toFixed(3)} DT</td> 
- </tr> ))} 
-</tbody>
-</table>
+        <div id="printable-journal">
+          {/* Édité le … (toujours visible) */}
+        <div className="hidden print:block text-right font-medium text-sm mb-1">
+          {formatDateTimeNow()}
+        </div>
 
+
+          {/* Impression uniquement : EXTRAIT CAISSE et période */}
+          <div className="hidden print:block text-center font-bold text-lg mt-6 mb-2">
+            EXTRAIT CAISSE
+          </div>
+          <div className="hidden print:block font-semibold text-center text-sm mb-4">
+            DU {new Date(startDate).toLocaleDateString("fr-FR")} AU{" "}
+            {new Date(endDate).toLocaleDateString("fr-FR")}
+          </div>
+
+          {/* En-tête visible uniquement à l'écran */}
+          <h2 className="text-xl font-semibold mb-2  print:hidden">
+            Liste des Mouvements
+          </h2>
+
+          <table className="min-w-full border border-gray-300 rounded shadow overflow-hidden">
+            <thead className="bg-blue-600 text-white">
+              <tr>
+                <th className="px-4 py-2 text-left border">Date</th>
+                <th className="px-4 py-2 text-left border">Nature Charge</th>
+                <th className="px-4 py-2 text-left border">Type Mouvement</th>
+                <th className="px-4 py-2 text-left border">Tier Type</th>
+                <th className="px-4 py-2 text-left border">Raison Sociale</th>
+                <th className="px-4 py-2 text-right border">Montant</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mouvements.map((mvt) => (
+                <tr key={mvt._id} className="border-t border-gray-200 hover:bg-blue-50">
+                  <td className="px-4 py-2 border">
+                    {new Date(mvt.date).toLocaleDateString("fr-FR")}
+                  </td>
+                  <td className="px-4 py-2 border">{mvt.natureCharge?.libelle || "-"}</td>
+                  <td className="px-4 py-2 border">{mvt.typeMouvement || "-"}</td>
+                  <td className="px-4 py-2 border">{mvt.tierType || "-"}</td>
+                  <td className="px-4 py-2 border">
+                    {mvt.tier?.rsoc || mvt.tier?.libelle || "-"}
+                  </td>
+                  <td className="px-4 py-2 border text-right">
+                    {mvt.montant?.toFixed(3)} DT
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

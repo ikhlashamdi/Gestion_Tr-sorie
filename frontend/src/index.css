@@ -58,3 +58,31 @@ body {
 button {
   cursor: pointer;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-journal, #printable-journal * {
+    visibility: visible;
+  }
+
+  #printable-journal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+@media print {
+  .print\\:hidden {
+    display: none !important;
+  }
+  .print\\:block {
+    display: block !important;
+  }
+  .print\\:text-center {
+    text-align: center !important;
+  }
+}

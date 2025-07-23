@@ -17,7 +17,7 @@ import AjouterFournisseur from './components/Fournisseur/AjouterFournisseur.jsx'
 import Fournisseur from './pages/fournisseur.jsx';
 import MouvementCaissePage from './components/mvtCaisse.jsx';
 import MvtCaisse from './pages/mvtCaisse';
-
+import Journaux from './pages/Journaux.jsx';
 
 
 
@@ -52,8 +52,7 @@ function App() {
       <Route path="/fournisseurs/ajouter" element={<AjouterFournisseur />} />
       <Route path="/fournisseurs/modifier/:id" element={<ModifierFournisseur />} />   
      <Route path="/mvt-caisse" element={<MvtCaisse />} />     
-
-
+     <Route path="/journal-caisse" element={<Journaux />} />     
 
 
       {/* Not Found */}

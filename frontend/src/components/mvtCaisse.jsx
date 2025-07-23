@@ -96,14 +96,16 @@ export default function MvtCaisseForm() {
     }
     try {
       setSubmitMsg("Envoi en cours...");
-      const payload = {
-        caisseCode: caisse,
-        typeMouvement,
-        natureChargeCode: natureCharge.code || natureCharge,
-        tierType: activeTierTab,
-        tierCode: selectedTier.code,
-        montant: montantTotal
-      };
+   const payload = {
+  caisseCode: caisse,
+  typeMouvement,
+  natureCharge: natureCharge._id || natureCharge,
+  natureChargeCode: natureCharge.code || "",
+  tierType: activeTierTab,
+  tierCode: selectedTier.code,
+  montant: montantTotal
+};
+
       await axios.post("http://localhost:5000/api/mouvements", payload);
       setSubmitMsg(" Mouvement enregistré avec succès !");
       setNatureCharge("");

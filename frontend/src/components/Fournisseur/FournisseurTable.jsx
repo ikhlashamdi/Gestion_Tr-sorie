@@ -79,9 +79,10 @@ export default function FournisseurTable({
           <thead>
             <tr className="bg-[var(--primary-light)] text-white">
               <th className="py-3 px-4 text-left">Code</th>
-              <th className="py-3 px-4 text-left">Raison Sociale</th>
+              <th className="py-3 px-4 text-left">Fournisseur</th>
+              <th className="py-3 px-4 text-left">Matricule</th>
               <th className="py-3 px-4 text-left">Adresse</th>
-              <th className="py-3 px-4 text-left">Télephone</th>
+              <th className="py-3 px-4 text-left">Téléphone</th>
               <th className="py-3 px-4 text-center">Actions</th>
             </tr>
           </thead>
@@ -102,6 +103,7 @@ export default function FournisseurTable({
                 >
                   <td className="py-3 px-4">{fournisseur.code}</td>
                   <td className="py-3 px-4">{fournisseur.rsoc}</td>
+                  <td className="py-3 px-4">{fournisseur.mf}</td>
                   <td className="py-3 px-4">{fournisseur.adresse}</td>
                   <td className="py-3 px-4">{fournisseur.tel}</td>
                   <td className="py-3 px-4 text-center">

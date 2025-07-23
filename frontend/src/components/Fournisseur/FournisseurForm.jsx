@@ -65,7 +65,7 @@ export default function FournisseurForm({ onSubmit, fournisseur, onCancel, isEdi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Raison Sociale</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Fournisseur</label>
             <input
               type="text"
               name="rsoc"
@@ -76,6 +76,17 @@ export default function FournisseurForm({ onSubmit, fournisseur, onCancel, isEdi
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Matricule</label>
+            <input
+              type="text"
+              name="mf"
+              value={form.mf}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
             <input

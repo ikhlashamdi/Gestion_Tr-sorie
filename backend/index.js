@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const connectToDatabase = require('./Models/db');
 const cors = require('cors');
-
+const path = require("path");
 const authRouter = require('./Routes/AuthRouter');
 const caisseRoutes = require('./Routes/caisseRoutes');
 const natureChargeRoutes = require('./Routes/natureChargeRoutes');
@@ -11,9 +11,11 @@ const personnelRoutes = require('./Routes/personnelRoutes');
 const banqueRoutes = require('./Routes/banqueRoutes');
 const vehiculeRoutes = require('./Routes/VehiculeRoutes');
 const clientRoutes = require('./Routes/clientRoutes');
-
+const userRoutes = require("./Routes/userRoutes");
 const fournisseurRoutes = require('./Routes/fournisseurRoutes');
-
+const tiersRouter = require('./Routes/tiersR');
+const mouvementsRoutes = require('./Routes/mouvementRoutes');
+const rapportRoutes = require("./Routes/rapports");
 
 
 const app = express();
@@ -31,13 +33,22 @@ connectToDatabase();
 app.use('/api/auth', authRouter);
 app.use('/api/caisses', caisseRoutes);
 app.use('/api/nature-charges', natureChargeRoutes);
-app.use('/api/tiers', tierRoutes);
+app.use('/api/autre', tierRoutes);
 app.use('/api/personnels', personnelRoutes);
 app.use('/api/vehicules', vehiculeRoutes);
 app.use('/api/banques', banqueRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/fournisseurs', fournisseurRoutes);
 app.use('/api/mouvements', require('./Routes/mouvementRoutes'));
+app.use("/uploads", express.static("uploads"));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/tiers', tiersRouter);
+
+app.use("/api/users", userRoutes);
+
+app.use('/api/mouvements', mouvementsRoutes);
+
+app.use("/api/rapports", rapportRoutes);
 
 // ✅ Démarrer le serveur
 const PORT = process.env.PORT || 5000;

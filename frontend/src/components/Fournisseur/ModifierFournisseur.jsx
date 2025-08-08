@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import FournisseurForm from "./FournisseurForm";
-import Layout from "../common/Layout";
 
 export default function ModifierFournisseur() {
   const { id } = useParams();
@@ -32,7 +31,7 @@ export default function ModifierFournisseur() {
   };
 
   return (
-    <Layout>
+    <>
       {fournisseur && (
         <FournisseurForm
           fournisseur={fournisseur}
@@ -41,6 +40,6 @@ export default function ModifierFournisseur() {
           isEdit={true}
         />
       )}
-    </Layout>
+    </>
   );
 }

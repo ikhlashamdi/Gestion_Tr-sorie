@@ -19,16 +19,20 @@ const generateNextCode = (vehicules) => {
   return `VH${nextNumber}`;
 };
 
-export default function VehiculeModal({ open, onClose, onSubmit, vehicule, vehicules }) {
-  const [form, setForm] = useState({ code: "", libelle: "" });
+export default function VehiculeModal({ open, onClose, onCreated, vehicule, vehicules }) {
+  const [form, setForm] = useState({ code: "", libelle: "", numv: "" });
   const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!vehicule) {
       const nextCode = generateNextCode(vehicules);
-      setForm({ code: nextCode, libelle: "" });
+      setForm({ code: nextCode, libelle: "", numv: "" });
     } else {
-      setForm(vehicule);
+      setForm({
+        code: vehicule.code || "",
+        libelle: vehicule.libelle || "",
+        numv: vehicule.numv || "",
+      });
     }
   }, [vehicule, open, vehicules]);
 
@@ -49,7 +53,8 @@ export default function VehiculeModal({ open, onClose, onSubmit, vehicule, vehic
       return;
     }
 
-    onSubmit(form);
+    // Utilise onCreated au lieu de onSubmit, en envoyant le modèle 'Vehicule' et les données
+    onCreated(form);
   };
 
   const handleBackdropClick = (e) => {
@@ -103,7 +108,7 @@ export default function VehiculeModal({ open, onClose, onSubmit, vehicule, vehic
               required
             />
           </div>
-                    <div className="mb-6">
+          <div className="mb-6">
             <label className="block text-gray-700 mb-1">Matricule</label>
             <input
               type="text"

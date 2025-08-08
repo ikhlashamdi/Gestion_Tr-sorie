@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import FournisseurForm from "./FournisseurForm";
-import Layout from "../common/Layout";
 
 export default function AjouterFournisseur() {
   const navigate = useNavigate();
@@ -52,7 +51,7 @@ export default function AjouterFournisseur() {
   };
 
   return (
-    <Layout>
+    <>
       {initialData && (
         <FournisseurForm
           onSubmit={handleAdd}
@@ -61,6 +60,6 @@ export default function AjouterFournisseur() {
           isEdit={false}
         />
       )}
-    </Layout>
+    </>
   );
 }

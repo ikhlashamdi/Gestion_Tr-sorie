@@ -19,6 +19,22 @@ const UserSchema = new mongoose.Schema({
         required: true,
         minlength: 6,
     },
+    profileImage: {
+         type: String, 
+         default: "" 
+    },
+    role: { 
+    type: String, 
+    enum: ["admin", "responsable", "caissier"], 
+    required: true,
+    default: 'cashier'
+  },
+    societe: {
+    type: String,
+    required: true,
+    trim: true
+    }
+
 });
 
 // Middleware pour hasher le mot de passe avant de sauvegarder
@@ -33,7 +49,7 @@ UserSchema.pre('save', async function (next) {
     }
 });
 
-// Méthode pour vérifier le mot de passe
+
 UserSchema.methods.comparePassword = async function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };
@@ -42,25 +58,3 @@ module.exports = mongoose.model('User', UserSchema);
 
 
 
-
-// // models/Personel.js
-// const mongoose = require('mongoose');
-
-// const personelSchema = new mongoose.Schema({
-//   nomPrenom: { type: String, required: true },
-//   CIN: String,
-//   numCNSS: String,
-//   adress: String,
-//   dateRecrutement: Date,
-//   dateNaissance: Date,
-//   qualification: { type: String }, // populate from API
-//   service: String,
-//   categorie: String, // list from API
-//   echelon: String,   // list from API
-//   categorieAvance: String,
-//   nature: String,
-//   debut: Date,
-//   fin: Date
-// });
-
-// module.exports = mongoose.model('Personel', personelSchema);

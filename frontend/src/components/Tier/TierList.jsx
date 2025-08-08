@@ -1,55 +1,39 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import TierModal from "./TierModal";
+import { useNavigate } from "react-router-dom";
 import TierTable from "./TierTable";
 
 export default function TierList() {
   const [tiers, setTiers] = useState([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedTier, setSelectedTier] = useState(null);
+  const navigate = useNavigate();
 
-  // 🔍 Fonction de recherche
   const fetchTiers = async (search = "") => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/tiers?search=${search}`);
-      setTiers(response.data);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des tiers :", error);
+      const res = await axios.get(`http://localhost:5000/api/autre?search=${search}`);
+      setTiers(res.data);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des tiers :", err);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Supprimer ce tier ?")) return;
+    const confirm = window.confirm("Voulez-vous vraiment supprimer ce tier ?");
+    if (!confirm) return;
+
     try {
-      await axios.delete(`http://localhost:5000/api/tiers/${id}`);
+      await axios.delete(`http://localhost:5000/api/autre/${id}`);
       fetchTiers();
-    } catch (error) {
-      console.error("Erreur lors de la suppression :", error);
+    } catch (err) {
+      console.error("Erreur lors de la suppression :", err);
     }
   };
 
   const handleEdit = (tier) => {
-    setSelectedTier(tier);
-    setOpenModal(true);
+    navigate(`/tiers/${tier._id}`);
   };
 
   const handleAdd = () => {
-    setSelectedTier(null);
-    setOpenModal(true);
-  };
-
-  const handleModalSubmit = async (form) => {
-    try {
-      if (selectedTier) {
-        await axios.put(`http://localhost:5000/api/tiers/${selectedTier._id}`, form);
-      } else {
-        await axios.post("http://localhost:5000/api/tiers", form);
-      }
-      fetchTiers();
-      setOpenModal(false);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement :", error);
-    }
+    navigate("/tiers/nouveau");
   };
 
   useEffect(() => {
@@ -57,22 +41,12 @@ export default function TierList() {
   }, []);
 
   return (
-    <div className="w-full">
-      <TierTable
-        tiers={tiers}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onAdd={handleAdd}
-        onSearch={fetchTiers}
-      />
-
-      <TierModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSubmit={handleModalSubmit}
-        tier={selectedTier}
-        tiers={tiers}
-      />
-    </div>
+    <TierTable
+      tiers={tiers}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      onAdd={handleAdd}
+      onSearch={fetchTiers}
+    />
   );
 }

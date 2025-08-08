@@ -9,6 +9,11 @@ const tierSchema = new mongoose.Schema({
     libelle: {
         type: String,
         required: true
+    },
+        model: {       
+        type: String,
+        enum: ["Client", "Fournisseur", "Vehicule", "Personnel", "Banque", "Tiers"],
+        required: false
     }
 });
 

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { X } from "lucide-react";
 
-
+// Génère automatiquement le prochain code BKxx
 const generateNextCode = (banques) => {
   if (!banques || banques.length === 0) return "BK01";
 
@@ -19,18 +20,38 @@ const generateNextCode = (banques) => {
   return `BK${nextNumber}`;
 };
 
-export default function BanqueModal({ open, onClose, onSubmit, banque, banques }) {
-  const [form, setForm] = useState({ code: "", libelle: "" , numcompte: ""});
-  const dialogRef = useRef(null);
+export default function BanqueModal({ open, onClose, onCreated }) {
+  const [form, setForm] = useState({
+    code: "",
+    libelle: "",
+    numcompte: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [banques, setBanques] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!banque) {
-      const nextCode = generateNextCode(banques);
-      setForm({ code: nextCode, libelle: "", numcompte: "" });
-    } else {
-      setForm(banque);
-    }
-  }, [banque, open, banques]);
+    if (!open) return;
+
+    const fetchBanques = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/banques");
+        setBanques(res.data);
+        const nextCode = generateNextCode(res.data);
+        setForm({
+          code: nextCode,
+          libelle: "",
+          numcompte: "",
+        });
+      } catch (err) {
+        console.error("Erreur chargement banques :", err);
+      }
+    };
+
+    fetchBanques();
+  }, [open]);
+
+  if (!open) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,94 +59,95 @@ export default function BanqueModal({ open, onClose, onSubmit, banque, banques }
     setForm((prev) => ({ ...prev, [name]: formattedValue }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const isDuplicate = (banques || []).some(
-      (b) => b.code === form.code && b._id !== banque?._id
-    );
-
-    if (isDuplicate) {
-      alert("Ce code existe déjà !");
+    if (!form.code || !form.libelle) {
+      setError("Code et Libellé sont obligatoires.");
       return;
     }
 
-    onSubmit(form);
-  };
+    try {
+      setLoading(true);
+      setError("");
 
-  const handleBackdropClick = (e) => {
-    if (dialogRef.current && !dialogRef.current.contains(e.target)) {
-      onClose();
+      const res = await axios.post("http://localhost:5000/api/banques", form);
+      onCreated("Banque", res.data); // on passe "Banque" comme modèle
+      onClose(); // ferme le modal
+    } catch (err) {
+      console.error(err);
+      setError("Erreur lors de la création de la banque.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-50" onMouseDown={handleBackdropClick}>
-      <div
-        ref={dialogRef}
-        className="bg-white p-6 rounded shadow-lg max-w-md w-full relative"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="relative bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
         <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
           onClick={onClose}
+          className="absolute top-3 right-3 text-gray-400 hover:text-red-600"
         >
           <X size={24} />
         </button>
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          {banque ? "Modifier Banque" : "Ajouter Banque"}
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-1">Code</label>
+
+        <h2 className="text-xl font-semibold mb-4">Nouvelle Banque</h2>
+
+        {error && (
+          <div className="mb-3 text-red-600 bg-red-100 p-2 rounded">{error}</div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Code</label>
             <input
               type="text"
               name="code"
               value={form.code}
               readOnly
-              className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-600"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 text-gray-600"
               required
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-1">Libellé</label>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Libellé</label>
             <input
               type="text"
               name="libelle"
-              placeholder="Libellé"
               value={form.libelle}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
               required
             />
           </div>
-                    <div className="mb-6">
-            <label className="block text-gray-700 mb-1">Num Compte</label>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Numéro de compte</label>
             <input
               type="text"
               name="numcompte"
-              placeholder="Num Compte"
               value={form.numcompte}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-              required
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
             />
           </div>
-          <div className="flex justify-end gap-3">
+
+          <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition"
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="bg-[var(--primary)] text-white px-4 py-2 rounded hover:bg-[var(--primary-light)] transition"
+              disabled={loading}
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
             >
-              {banque ? "Modifier" : "Créer"}
+              {loading ? "Création..." : "Créer"}
             </button>
           </div>
         </form>

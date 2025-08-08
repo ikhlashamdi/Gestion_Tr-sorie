@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-
-
 const caisseSchema = new mongoose.Schema({
     code: {
         type: String,
@@ -9,8 +7,54 @@ const caisseSchema = new mongoose.Schema({
     libelle: {
         type: String,
         required: true
-    }
-});
+    },
+    soldeInitial: {
+    type: Number,
+    default: 0,
+    min: 0,
+    validate: null,
+    validate: {
+      validator: function (value) {
+        if (this.seuilMax > 0) {
+          return value <= this.seuilMax;
+        }
+        return true; 
+      },
+      message: "Le solde ne peut pas dépasser le seuil maximal.",
+    },
+    
+  },
+  soldeActuel: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  seuilMax: {
+    type: Number,
+    default: 0,
+    min: 0,
+    required: true,
+  },
+ dateCreation: {
+    type: Date,
+    default: Date.now
+  },
+  utilisateur: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: false
+  },
+  
+etat: {
+  type: String,
+  enum: ['brouillon', 'confirme', 'annule'],
+  default: 'brouillon'
+},
+  active: {
+    type: Boolean,
+    default: true
+  }});
+  
 
 const Caisse = mongoose.model('Caisse', caisseSchema);
 

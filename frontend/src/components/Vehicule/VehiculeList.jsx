@@ -71,13 +71,14 @@ export default function VehiculeList() {
         onSearch={fetchVehicules}
       />
 
-      <VehiculeModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSubmit={handleModalSubmit}
-        vehicule={selectedVehicule}
-        vehicules={vehicules}
-      />
+     <VehiculeModal
+  open={openModal}
+  onClose={() => setOpenModal(false)}
+  onCreated={handleModalSubmit}  // au lieu de onSubmit
+  vehicule={selectedVehicule}
+  vehicules={vehicules}
+/>
+
     </div>
   );
 }

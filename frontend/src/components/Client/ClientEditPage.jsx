@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ClientForm from "./ClientForm";
-import Layout from "../common/Layout"; 
 
 export default function ClientEditPage() {
   const { id } = useParams();
@@ -32,22 +31,15 @@ export default function ClientEditPage() {
   };
 
   if (!client) {
-    return (
-      <Layout>
-        <p className="text-center mt-10">Chargement du client...</p>
-      </Layout>
-    );
+    return <p className="text-center mt-10">Chargement du client...</p>;
   }
 
   return (
-    <Layout>
     <ClientForm
-  client={client}
-  onSubmit={handleUpdate}
-  onCancel={() => navigate("/clients")}
-  isEdit={true}
-/>
-
-    </Layout>
+      client={client}
+      onSubmit={handleUpdate}
+      onCancel={() => navigate("/clients")}
+      isEdit={true}
+    />
   );
 }

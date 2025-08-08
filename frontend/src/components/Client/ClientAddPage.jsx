@@ -36,16 +36,16 @@ export default function ClientAddPage() {
     }
   };
 
-  return (
-    <Layout>
-      {initialClient && (
-        <ClientForm
-          client={initialClient}
-          onSubmit={handleCreate}
-          onCancel={() => navigate("/clients")}
-          isEdit={false}
-        />
-      )}
-    </Layout>
-  );
+return (
+  <>
+    {initialClient && (
+      <ClientForm
+        client={initialClient}
+        onSubmit={handleCreate}
+        onCancel={() => navigate("/clients")}
+        isEdit={false}
+      />
+    )}
+  </>
+);
 }

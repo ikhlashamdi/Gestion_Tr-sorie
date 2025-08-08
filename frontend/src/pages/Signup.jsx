@@ -8,6 +8,7 @@ function Signup() {
         name: '',
         email: '',
         password: '',
+        societe: '' 
     });
 
     const navigate = useNavigate();
@@ -22,10 +23,11 @@ function Signup() {
 
         const { name, email, password } = signupInfo;
 
-        if (!name || !email || !password) {
-            toast.error('Tous les champs (nom, email et mot de passe) sont requis.');
-            return;
-        }
+      if (!name || !email || !password || !signupInfo.societe) {
+        toast.error('Tous les champs (nom, email, mot de passe et société) sont requis.');
+        return;
+      }
+
 
         try {
             const response = await fetch('http://localhost:5000/api/auth/register', {
@@ -98,6 +100,33 @@ return (
               Name
             </label>
           </div>
+          {/* Societe Input */}
+<div className="relative">
+  <input
+    id="societe"
+    type="text"
+    name="societe"
+    value={signupInfo.societe}
+    onChange={handleChange}
+    placeholder=" "
+    className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
+    style={{
+      borderColor: "var(--med-light-gray)",
+      backgroundColor: "white",
+    }}
+  />
+  <label
+    htmlFor="societe"
+    className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
+    style={{
+      top: "50%",
+      transform: "translateY(-50%)",
+    }}
+  >
+    Société
+  </label>
+</div>
+
 
           {/* Email Input */}
           <div className="relative">

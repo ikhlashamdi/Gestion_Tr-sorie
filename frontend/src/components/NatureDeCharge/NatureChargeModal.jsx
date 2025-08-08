@@ -1,24 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-
 const generateNextCode = (natureCharges) => {
-  if (!natureCharges || natureCharges.length === 0) {
-    return "NC01";
-  }
-
+  if (!natureCharges || natureCharges.length === 0) return "NC01";
+  
   const codes = natureCharges
     .map((n) => n.code)
-    .filter((code) => /^NC\d+$/.test(code));
-
+    .filter(code => /^NC\d+$/.test(code));
+    
   if (codes.length === 0) return "NC01";
-
+  
   const maxNumber = Math.max(
-    ...codes.map((code) => parseInt(code.replace("NC", ""), 10))
-  );
-
-  const nextNumber = (maxNumber + 1).toString().padStart(2, "0");
-  return `NC${nextNumber}`;
+    ...codes.map(code => parseInt(code.replace("NC", ""), 10)
+  ));
+  
+  return `NC${(maxNumber + 1).toString().padStart(2, '0')}`;
 };
 
 export default function NatureChargeModal({
@@ -29,12 +25,15 @@ export default function NatureChargeModal({
   natureCharges
 }) {
   const [form, setForm] = useState({ code: "", libelle: "" });
+  const [error, setError] = useState("");
   const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!natureCharge) {
-      const nextCode = generateNextCode(natureCharges);
-      setForm({ code: nextCode, libelle: "" });
+      setForm({
+        code: generateNextCode(natureCharges),
+        libelle: ""
+      });
     } else {
       setForm(natureCharge);
     }
@@ -42,22 +41,33 @@ export default function NatureChargeModal({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const val = name === "code" ? value.toUpperCase() : value;
-    setForm((prev) => ({ ...prev, [name]: val }));
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const validateForm = () => {
+    if (!form.libelle.trim()) {
+      setError("Le libellé est requis");
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const isDuplicate = (natureCharges || []).some(
-      (n) => n.code === form.code && n._id !== natureCharge?._id
+    setError("");
+    
+    if (!validateForm()) return;
+    
+    const isDuplicate = natureCharges.some(
+      n => n.libelle.toLowerCase() === form.libelle.toLowerCase() && 
+           n._id !== natureCharge?._id
     );
-
+    
     if (isDuplicate) {
-      alert("Ce code existe déjà !");
+      setError("Cette nature existe déjà");
       return;
     }
-
+    
     onSubmit(form);
   };
 
@@ -71,7 +81,7 @@ export default function NatureChargeModal({
 
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center bg-black/30"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
       onMouseDown={handleBackdropClick}
     >
       <div
@@ -80,15 +90,23 @@ export default function NatureChargeModal({
         onMouseDown={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-[var(--danger)] transition-colors"
+          className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors"
           onClick={onClose}
           aria-label="Fermer"
         >
           <X size={24} />
         </button>
+        
         <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          {natureCharge ? "Modifier Nature de Charge" : "Ajouter Nature de Charge"}
+          {natureCharge ? "Modifier Nature" : "Nouvelle Nature de Charge"}
         </h2>
+        
+        {error && (
+          <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm rounded">
+            {error}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700 mb-1">Code</label>
@@ -97,32 +115,36 @@ export default function NatureChargeModal({
               name="code"
               value={form.code}
               readOnly
-              className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-600"
-              required
+              className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-600 cursor-not-allowed"
             />
           </div>
+          
           <div className="mb-6">
-            <label className="block text-gray-700 mb-1">Libellé</label>
+            <label className="block text-gray-700 mb-1">
+              Libellé *
+            </label>
             <input
               type="text"
               name="libelle"
               value={form.libelle}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              required
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Description de la nature"
+              autoFocus
             />
           </div>
+          
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition"
+              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="bg-[var(--primary)] text-white px-4 py-2 rounded hover:bg-[var(--primary-light)] transition"
+              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
             >
               {natureCharge ? "Modifier" : "Créer"}
             </button>

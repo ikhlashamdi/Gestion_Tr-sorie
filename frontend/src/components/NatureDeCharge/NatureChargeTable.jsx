@@ -1,17 +1,19 @@
 import React, { useState } from "react";
-import { Pencil, Trash2, Plus, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Plus, Pencil, Trash2, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 
-export default function NatureChargeTable({
-  natureCharges = [],
-  onEdit = () => {},
-  onDelete = () => {},
-  onAdd = () => {},
-  onSearch = () => {},
-  showHeader = true,
+export default function NatureChargeTable({ 
+  natures = [], 
+  onEdit = () => {}, 
+  onDelete = () => {}, 
+  onAdd = () => {}, 
+  onSearch = () => {} 
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    status: "all",
+  });
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -19,108 +21,173 @@ export default function NatureChargeTable({
     onSearch(value);
   };
 
-  return (
-    <div className="w-full mt-10 px-6">
-      {/* Header + Breadcrumb */}
-      {showHeader && (
-        <div className="bg-white px-6 py-4 rounded-lg shadow flex items-center justify-between mb-6">
-          <h1 className="text-xl font-semibold text-gray-800">Gestion des Natures de Charge</h1>
-          <div className="text-sm text-gray-500">
-            <button
-              onClick={() => navigate("/home")}
-              className="bg-gray-100 px-3 py-1 rounded text-gray-700 hover:text-gray-900 hover:bg-gray-200 transition"
-            >
-              Tableau de bord
-            </button>
-            <span className="mx-1">/</span>
-            <span className="text-gray-500">Natures de Charge</span>
-          </div>
-        </div>
-      )}
+  const handleSort = (key) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
 
-      {/* Bouton + Barre de recherche */}
-      {showHeader && (
-        <div className="flex justify-between items-center px-4 mt-2">
-          <h3 className="text-lg font-semibold text-gray-600">Recherche et filtres</h3>
+  const getSortedItems = () => {
+    const sortableItems = [...natures];
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  };
+
+  const handleFilterChange = (filterName, value) => {
+    setActiveFilters({
+      ...activeFilters,
+      [filterName]: value
+    });
+  };
+
+  const applyFilters = (nature) => {
+    // Status filter
+    if (activeFilters.status && activeFilters.status !== "all") {
+      if (activeFilters.status === "active" && !nature.active) return false;
+      if (activeFilters.status === "inactive" && nature.active) return false;
+    }
+    
+    return true;
+  };
+
+  const filteredNatures = getSortedItems().filter(applyFilters);
+
+  return (
+    <div className="px-6 py-6 bg-white rounded-xl shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Natures de charge</h2>
+          <p className="text-gray-600">Gestion des différentes natures de dépenses</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
+
+          
           <button
             onClick={onAdd}
-            className="bg-[var(--primary)] text-white px-4 py-2 rounded hover:bg-[var(--primary-light)] transition"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-lg hover:from-purple-700 hover:to-indigo-800 transition-colors shadow-md"
           >
-            <Plus size={16} className="inline mr-1" />
-            Nouvelle Nature
+            <Plus size={16} />
+            <span>Nouvelle nature</span>
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Input de recherche */}
-      {showHeader && (
-        <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-b-md shadow mt-2">
-          <Search className="text-gray-500" />
+      
+
+      <div className="mb-6">
+        <div className="flex items-center bg-white p-3 rounded-lg border border-gray-300 shadow-sm">
+          <Search size={20} className="text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Rechercher par code ou libellé..."
+            placeholder="Rechercher par code, libellé..."
             value={searchTerm}
             onChange={handleSearch}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            className="w-full outline-none text-gray-700"
           />
         </div>
-      )}
+      </div>
 
-      {/* Résultat count */}
-      {showHeader && (
-        <div className="mt-4 text-gray-600 font-semibold px-4">
-          Liste des Natures de Charge ({natureCharges.length})
-        </div>
-      )}
-
-      {/* Tableau */}
-      <div className="overflow-x-auto mt-4">
-        <table className="min-w-full bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
-          <thead>
-            <tr className="bg-[var(--primary-light)] text-white">
-              <th className="py-3 px-4 text-left">Code</th>
-              <th className="py-3 px-4 text-left">Libellé</th>
-              <th className="py-3 px-4 text-center">Actions</th>
+      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+        <table className="w-full">
+          <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
+            <tr>
+              <th 
+                className="px-4 py-3 text-center text-sm font-bold text-gray-800 uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSort("code")}
+              >
+                <div className="flex items-center justify-center">
+                  Code
+                  {sortConfig.key === "code" && (
+                    sortConfig.direction === "ascending" ? 
+                    <ChevronUp size={14} className="ml-1" /> : 
+                    <ChevronDown size={14} className="ml-1" />
+                  )}
+                </div>
+              </th>
+              <th 
+                className="px-4 py-3 text-center text-sm font-bold text-gray-800 uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSort("libelle")}
+              >
+                <div className="flex items-center justify-center">
+                  Libellé
+                  {sortConfig.key === "libelle" && (
+                    sortConfig.direction === "ascending" ? 
+                    <ChevronUp size={14} className="ml-1" /> : 
+                    <ChevronDown size={14} className="ml-1" />
+                  )}
+                </div>
+              </th>
+            
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {natureCharges.length === 0 ? (
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredNatures.length === 0 ? (
               <tr>
-                <td colSpan={3} className="py-6 text-center text-gray-400">
-                  Aucune nature de charge trouvée.
+                <td colSpan="4" className="px-4 py-6 text-center text-gray-500">
+                  <div className="flex flex-col items-center justify-center">
+                    <Search size={40} className="text-gray-400 mb-3" />
+                    <p className="text-gray-600 font-medium">Aucune nature trouvée</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Essayez de modifier vos filtres ou votre recherche
+                    </p>
+                  </div>
                 </td>
               </tr>
             ) : (
-              natureCharges.map((natureCharge, idx) => (
-                <tr
-                  key={natureCharge._id}
-                  className={`transition-colors ${
-                    idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  } hover:bg-[var(--primary-light)/10]`}
-                >
-                  <td className="py-3 px-4">{natureCharge.code}</td>
-                  <td className="py-3 px-4">{natureCharge.libelle}</td>
-                  <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => onEdit(natureCharge)}
-                      className="inline-flex items-center justify-center p-2 rounded hover:bg-blue-50 text-blue-600 hover:text-blue-800 transition"
-                      title="Modifier"
-                    >
-                      <Pencil size={20} />
-                    </button>
-                    <button
-                      onClick={() => onDelete(natureCharge._id)}
-                      className="inline-flex items-center justify-center p-2 rounded hover:bg-red-50 text-red-600 hover:text-red-800 transition ml-2"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+              filteredNatures.map((nature) => (
+                <tr key={nature._id} className="hover:bg-purple-50 transition-colors">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900 text-center">
+                    {nature.code}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                    {nature.libelle}
+                  </td>
+                 
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button 
+                        onClick={() => onEdit(nature)} 
+                        className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                        title="Modifier"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button 
+                        onClick={() => onDelete(nature._id)} 
+                        className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                        title="Supprimer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-6 flex justify-between items-center">
+        <div className="text-sm text-gray-500">
+          {filteredNatures.length} natures affichées
+        </div>
       </div>
     </div>
   );

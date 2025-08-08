@@ -1,30 +1,64 @@
 const mongoose = require('mongoose');
 
 const mvtCaisseSchema = new mongoose.Schema({
-caisseCode: String,
-typeMouvement: String,
+  caisse: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Caisse",
+    required: true
+  },
+
+  typeMouvement: {
+    type: String,
+    required: true,
+    enum: ["encaissement", "decaissement"]
+  },
+
   natureCharge: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "NatureCharge"
   },
 
-tierType: String,
-tierCode: String,
-montant: Number,
-date: { type: Date, default: Date.now },
+  tier: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: 'tierModel',
+    required: false
+  },
 
-type: {
-type: String,
-enum: ["entrée", "sortie"],
-required: false,
-},
-caisse: {
-type: mongoose.Schema.Types.ObjectId,
-ref: "Caisse",
-},
+  tierModel: {
+    type: String,
+    enum: ["Client", "Fournisseur", "Vehicule", "Personnel", "Banque", "Tiers"],
+    required: false
+  },
+
+  montant: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+
+  date: {
+    type: Date,
+    default: Date.now
+  },
+
+  utilisateur: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+
+  etat: {
+    type: String,
+    enum: ["brouillon", "valide", "annule"],
+    default: "brouillon",
+    required: false
+  },
+
+  description: {
+    type: String,
+    trim: true,
+    required: false
+  }
 });
-
-
-
 
 module.exports = mongoose.model('MvtCaisse', mvtCaisseSchema);

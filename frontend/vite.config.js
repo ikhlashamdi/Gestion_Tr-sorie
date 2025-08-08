@@ -8,4 +8,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    host: '127.0.0.1', // force IPv4 au lieu de ::1
+    port: 3000         // utilise le port 3000
+  }
 })

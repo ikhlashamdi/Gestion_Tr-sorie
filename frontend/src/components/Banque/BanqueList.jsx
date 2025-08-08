@@ -63,7 +63,7 @@ export default function BanqueList() {
       <BanqueModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        onSubmit={handleModalSubmit}
+          onCreated={handleModalSubmit}
         banque={selectedBanque}
         banques={banques}
       />

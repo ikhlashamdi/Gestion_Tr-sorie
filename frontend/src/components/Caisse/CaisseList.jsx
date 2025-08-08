@@ -1,22 +1,19 @@
+// src/pages/caisse/CaisseList.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import CaisseModal from "./CaisseModal";
+import { useNavigate } from "react-router-dom";
 import CaisseTable from "./CaisseTable";
 
 export default function CaisseList() {
   const [caisses, setCaisses] = useState([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedCaisse, setSelectedCaisse] = useState(null);
+  const navigate = useNavigate();
 
-  // Recherche avec paramètre facultatif
   const fetchCaisses = async (search = "") => {
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/caisses?search=${search}`
-      );
-      setCaisses(response.data);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des caisses :", error);
+      const res = await axios.get(`http://localhost:5000/api/caisses?search=${search}`);
+      setCaisses(res.data);
+    } catch (err) {
+      console.error("Erreur récupération des caisses", err);
     }
   };
 
@@ -25,59 +22,25 @@ export default function CaisseList() {
     try {
       await axios.delete(`http://localhost:5000/api/caisses/${id}`);
       fetchCaisses();
-    } catch (error) {
-      console.error("Erreur lors de la suppression :", error);
+    } catch (err) {
+      console.error("Erreur suppression :", err);
     }
   };
 
-  const handleEdit = (caisse) => {
-    setSelectedCaisse(caisse);
-    setOpenModal(true);
-  };
-
-  const handleAdd = () => {
-    setSelectedCaisse(null);
-    setOpenModal(true);
-  };
-
-  const handleModalSubmit = async (form) => {
-    try {
-      if (selectedCaisse) {
-        await axios.put(
-          `http://localhost:5000/api/caisses/${selectedCaisse._id}`,
-          form
-        );
-      } else {
-        await axios.post("http://localhost:5000/api/caisses", form);
-      }
-      fetchCaisses();
-      setOpenModal(false);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement :", error);
-    }
-  };
+  const handleEdit = (caisse) => navigate(`/caisses/${caisse._id}`);
+  const handleAdd = () => navigate("/caisses/nouveau");
 
   useEffect(() => {
     fetchCaisses();
   }, []);
 
   return (
-    <div className="w-full">
-      <CaisseTable
-        caisses={caisses}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onAdd={handleAdd}
-        onSearch={fetchCaisses}
-      />
-
-      <CaisseModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSubmit={handleModalSubmit}
-        caisse={selectedCaisse}
-        caisses={caisses} 
-      />
-    </div>
+    <CaisseTable
+      caisses={caisses}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      onAdd={handleAdd}
+      onSearch={fetchCaisses}
+    />
   );
 }

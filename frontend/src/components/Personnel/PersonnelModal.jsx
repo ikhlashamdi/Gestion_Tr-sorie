@@ -1,22 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-// Générer le prochain code automatiquement (ex: PR01, PR02)
 const generateNextCode = (personnels) => {
   if (!personnels || personnels.length === 0) {
     return "PR01";
   }
-
   const codes = personnels
     .map((p) => p.code)
     .filter((code) => /^PR\d+$/.test(code));
-
   if (codes.length === 0) return "PR01";
-
   const maxNumber = Math.max(
     ...codes.map((code) => parseInt(code.replace("PR", ""), 10))
   );
-
   const nextNumber = (maxNumber + 1).toString().padStart(2, "0");
   return `PR${nextNumber}`;
 };
@@ -24,9 +19,9 @@ const generateNextCode = (personnels) => {
 export default function PersonnelModal({
   open,
   onClose,
-  onSubmit,
+  onCreated,  // callback vers parent avec les données du formulaire
   personnel,
-  personnels
+  personnels,
 }) {
   const [form, setForm] = useState({ code: "", libelle: "" });
   const dialogRef = useRef(null);
@@ -58,7 +53,7 @@ export default function PersonnelModal({
       return;
     }
 
-    onSubmit(form);
+    onCreated(form);
   };
 
   const handleBackdropClick = (e) => {

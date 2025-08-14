@@ -209,8 +209,8 @@ router.get('/historique/:caisseId', async (req, res) => {
 
       return {
         _id: mvt._id,
-        date: mvt.date,
-        type: mvt.typeMouvement,
+        date:mvt.date,
+        typeMouvement : mvt.typeMouvement,
         montant: mvt.montant,
         nature: mvt.natureCharge?.libelle || null,
         tier: mvt.tier?.libelle || null,

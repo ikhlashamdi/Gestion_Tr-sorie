@@ -15,6 +15,12 @@ import {
   User,
   Truck,
   Building2,
+  PlusCircle ,
+  Clock,
+  ArrowRightCircle,
+  ArrowRightCircleIcon,
+  ArrowUpRightFromCircle,
+  ArrowRightLeft
 } from 'lucide-react';
 import { getCookie, setCookie } from '../../utils/cookieSetterAndGetter';
 
@@ -27,6 +33,8 @@ const Sidebar = () => {
   const [ficheBaseOpen, setFicheBaseOpen] = useState(false);
 
   const [sidebarWidth, setSidebarWidth] = useState(getSidebarWidth());
+  const [transfertOpen, setTransfertOpen] = useState(false);
+
 
   function getSidebarWidth() {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -50,10 +58,9 @@ const Sidebar = () => {
     if (cookieVal === 'true' && dopen !== true) updateDopen(true);
   }, []);
 
-  useEffect(() => {
+   useEffect(() => {
     setCookie('dopen', dopen);
   }, [dopen]);
-
 
   useEffect(() => {
     const ficheBaseRoutes = [
@@ -66,13 +73,22 @@ const Sidebar = () => {
       '/vehicule',
       '/banque',
     ];
-
     const isInFicheBase = ficheBaseRoutes.some((route) =>
       location.pathname.startsWith(route)
     );
-
     setFicheBaseOpen(isInFicheBase);
+
+    const transfertRoutes = [
+      '/transfert',
+      '/transfert/historique',
+      '/transfert/nouveau'
+    ];
+    const isInTransfert = transfertRoutes.some((route) =>
+      location.pathname.startsWith(route)
+    );
+    setTransfertOpen(isInTransfert);
   }, [location.pathname]);
+
 
   return (
     <aside
@@ -129,6 +145,28 @@ const Sidebar = () => {
         </div>
 
         <SidebarLink to="/mvt-caisse" icon={<Banknote size={24} />} label="Mvt de caisse" dopen={dopen} />
+        <div>
+          <button
+            onClick={() => setTransfertOpen(!transfertOpen)}
+            className={`w-full flex items-center py-3 px-2.5 rounded-md text-[1.125rem] font-medium cursor-pointer transition-colors duration-200
+              ${dopen ? 'justify-between' : 'justify-center'}
+              text-[var(--sidebar-text)] hover:bg-[var(--sidebar-hover)]`}
+            style={{ userSelect: 'none' }}
+          >
+            <span className="flex items-center">
+              <ArrowRightLeft className="w-6 h-6" style={{ color: 'var(--gray-700)' }} />
+              {dopen && <span className="ml-3">Transfert de caisse</span>}
+            </span>
+            {dopen && (transfertOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />)}
+          </button>
+
+          {transfertOpen && dopen && (
+            <div className="pl-10 space-y-1 mt-1">
+              <SubLink to="/transfert/nouveau" label="Nouveau transfert" icon={<PlusCircle  size={18} />} />
+              <SubLink to="/transfert/historique" label="Historique" icon={<Clock size={18} />} />
+            </div>
+          )}
+        </div>
         <SidebarLink to="/journal-caisse" icon={<FileText size={24} />} label="Journal de caisse" dopen={dopen} />
       </nav>
     </aside>

@@ -17,6 +17,7 @@ import AjouterFournisseur from './components/Fournisseur/AjouterFournisseur.jsx'
 import Fournisseur from './pages/fournisseur.jsx';
 import MvtCaisse from './pages/mvtCaisse';
 import Journaux from './pages/Journaux.jsx';
+import Transfert from './components/transfertCaisse//TransfertCaisse.jsx';
 import ProfileUser from './pages/ProfileUser.jsx';
 import ProfileImageUpload from './components/profile/ProfileImageUpload.jsx';
 import ProfilePasswordChange from './components/profile/ProfilePasswordChange.jsx';
@@ -24,6 +25,7 @@ import CaisseFormPage from './components/Caisse/CaisseFormPage.jsx';
 import NatureChargeFormPage from './components/NatureDeCharge/NatureChargeFormPage.jsx';
 import Layout from "./components/common/Layout";
 import TierFormPage from './components/Tier/TierFormPage.jsx';
+import ListeTransferts from './components/transfertCaisse/ListeTransferts.jsx';
 
 const PrivateRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('token');
@@ -40,6 +42,8 @@ function App() {
       {/* 🟢 Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+
+  
 
       {/* 🔐 Protected Routes dans Layout */}
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
@@ -72,10 +76,11 @@ function App() {
         <Route path="caisses/nouveau" element={<CaisseFormPage />} />
         <Route path="caisses/:id" element={<CaisseFormPage />} />
 
-        {/* Mouvements & Journaux */}
+        {/* Mouvements & Journaux & Transfert */}
         <Route path="mvt-caisse" element={<MvtCaisse />} />
         <Route path="journal-caisse" element={<Journaux />} />
-
+        <Route path="transfert/nouveau" element={<Transfert />} />
+        <Route path="transfert/historique" element={<ListeTransferts />} />
         {/* Profil */}
         <Route path="profile" element={<ProfileUser />} />
         <Route path="profile/password" element={<ProfilePasswordChange />} />

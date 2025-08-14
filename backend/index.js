@@ -16,7 +16,7 @@ const fournisseurRoutes = require('./Routes/fournisseurRoutes');
 const tiersRouter = require('./Routes/tiersR');
 const mouvementsRoutes = require('./Routes/mouvementRoutes');
 const rapportRoutes = require("./Routes/rapports");
-
+const transfertRoutes = require("./Routes/transfertRoutes");
 
 const app = express();
 
@@ -43,13 +43,10 @@ app.use('/api/mouvements', require('./Routes/mouvementRoutes'));
 app.use("/uploads", express.static("uploads"));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/tiers', tiersRouter);
-
 app.use("/api/users", userRoutes);
-
 app.use('/api/mouvements', mouvementsRoutes);
-
 app.use("/api/rapports", rapportRoutes);
-
+app.use("/api/transferts", transfertRoutes);
 // ✅ Démarrer le serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -141,7 +141,7 @@ const Navbar = () => {
       {/* Logo */}
        <div className={`flex ml-2 items-center transition-all duration-300 ${searchExpanded ? 'hidden' : 'flex'} md:flex`}>
                 <Link to="/" className="text-xl font-semibold primary-cl-cl">
-                COMPTA
+                CAISSE
                 </Link>
             </div>
 

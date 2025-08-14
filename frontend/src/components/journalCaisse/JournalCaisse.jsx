@@ -354,11 +354,12 @@ export default function JournalCaisse() {
                     >
                       Date{getSortArrow("date")}
                     </th>
+                    
                     <th
                       className="px-4 py-3 text-left text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300"
-                      onClick={() => requestSort("natureCharge")}
+                      onClick={() => requestSort("description")}
                     >
-                      Nature Charge{getSortArrow("natureCharge")}
+                      Communication{getSortArrow("description")}
                     </th>
                     <th
                       className="px-4 py-3 text-left text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300"
@@ -378,6 +379,13 @@ export default function JournalCaisse() {
                     >
                       Raison Sociale{getSortArrow("tier")}
                     </th>
+                    
+                    <th
+                      className="px-4 py-3 text-left text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300"
+                      onClick={() => requestSort("natureCharge")}
+                    >
+                      Nature Charge{getSortArrow("natureCharge")}
+                    </th>
                     <th
                       className="px-4 py-3 text-right text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300"
                       onClick={() => requestSort("montant")}
@@ -392,6 +400,7 @@ export default function JournalCaisse() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         {new Date(mvt.date).toLocaleDateString("fr-FR")}
                       </td>
+                      <td className="px-4 py-3">{mvt.description || "-"}</td>
                       <td className="px-4 py-3">{mvt.natureCharge?.libelle || "-"}</td>
                       <td className="px-4 py-3 font-medium ">
                         {mvt.typeMouvement === "encaissement" ? "Encaissement" : "Décaissement"}

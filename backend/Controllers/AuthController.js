@@ -26,14 +26,27 @@ const loginUser = async (req, res) => {
 
     try {
         const user = await User.findOne({ email: req.body.email });
-        if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
 
-        const validPassword = await user.comparePassword(req.body.password);
-        if (!validPassword) return res.status(401).json({ message: 'Utilisateur non trouvé' });
+        // 🔐 Étape 1 : Vérifier si l'utilisateur existe ET si le mot de passe est valide.
+        // On combine les deux vérifications pour éviter de donner trop d'indices.
+        if (!user || !await user.comparePassword(req.body.password)) {
+            // Renvoyer un message générique pour des raisons de sécurité
+            return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+        }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ message: 'Connexion réussie', token });
+        // ✅ Étape 2 : Si l'utilisateur est authentifié, générer le token
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+            expiresIn: '1h',
+        });
+
+        // 🧹 Nettoyer l'objet utilisateur avant de l'envoyer
+        const userWithoutPassword = user.toObject();
+        delete userWithoutPassword.password;
+
+        res.status(200).json({ message: 'Connexion réussie', token, user: userWithoutPassword });
+
     } catch (error) {
+        // En cas d'erreur serveur inattendue
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }
 };

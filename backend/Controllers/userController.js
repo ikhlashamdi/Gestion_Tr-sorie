@@ -35,7 +35,7 @@ exports.uploadImage = async (req, res) => {
 
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("name email profileImage societe");
+    const user = await User.findById(req.user.id).select("name email profileImage societe role");
     if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
 
     res.json(user);

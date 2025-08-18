@@ -51,16 +51,40 @@ export default function CaisseTable({
     onSearch(value);
   };
 
-  const handleToggleActive = async (id) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/caisses/${id}/activer`, { method: "PATCH" });
-      if (!res.ok) throw new Error("Échec du changement de statut");
-      onSearch("");
-    } catch (err) {
-      console.error("Erreur activation/désactivation :", err);
-    }
-  };
+// CaisseTable.jsx
+const handleToggleActive = async (id) => {
+  try {
+    // Get the token from localStorage
+    const token = localStorage.getItem("token");
 
+    // Check if the token exists before making the request
+    if (!token) {
+      throw new Error("Jeton d'authentification manquant. Veuillez vous reconnecter.");
+    }
+
+    const res = await fetch(`http://localhost:5000/api/caisses/${id}/activer`, {
+      method: "PATCH",
+      // Add the headers with the Authorization token
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json', // It's good practice to include this header
+      },
+    });
+
+    if (!res.ok) {
+      // You can get more details from the server's response
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Échec du changement de statut");
+    }
+
+    // This re-fetches the list, which is a good approach
+    onSearch("");
+  } catch (err) {
+    console.error("Erreur activation/désactivation :", err);
+    // You might want to show a user-friendly error message here
+    alert("Erreur: " + err.message);
+  }
+};
   const handleSort = (key) => {
     let direction = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -302,35 +326,38 @@ export default function CaisseTable({
                       {caisse.active ? "Actif" : "Inactif"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex justify-center space-x-2">
-                      <button 
-                        onClick={() => onEdit(caisse)} 
-                        className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
-                        title="Modifier"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button 
-                        onClick={() => onDelete(caisse._id)} 
-                        className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-                        title="Supprimer"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleToggleActive(caisse._id)} 
-                        className={`p-2 rounded-full transition-colors ${
-                          caisse.active 
-                            ? "bg-gray-100 text-gray-600 hover:bg-gray-200" 
-                            : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                        }`}
-                        title={caisse.active ? "Désactiver" : "Activer"}
-                      >
-                        <Power size={16} />
-                      </button>
-                    </div>
-                  </td>
+  <td className="px-4 py-3 text-center">
+    <div className="flex justify-center space-x-2">
+      <button 
+        onClick={() => onEdit(caisse)} 
+        className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+        title="Modifier"
+      >
+        <Pencil size={16} />
+      </button>
+      <button 
+        onClick={() => onDelete(caisse._id)} 
+        className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+        title="Supprimer"
+      >
+        <Trash2 size={16} />
+      </button>
+      {/* La condition pour l'affichage du bouton d'activation/désactivation */}
+     {currentUser && currentUser.role === 'admin' && (
+        <button 
+          onClick={() => handleToggleActive(caisse._id)} 
+          className={`p-2 rounded-full transition-colors ${
+            caisse.active 
+              ? "bg-gray-100 text-gray-600 hover:bg-gray-200" 
+              : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+          }`}
+          title={caisse.active ? "Désactiver" : "Activer"}
+        >
+          <Power size={16} />
+        </button>
+      )}
+    </div>
+  </td>
                 </tr>
               ))
             )}

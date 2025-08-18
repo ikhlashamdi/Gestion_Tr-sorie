@@ -26,6 +26,11 @@ const transfertSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  statut: {
+    type: String,
+    enum: ['en_attente',  'accepté', 'annulé'],
+    default: 'en_attente'
+  },
   utilisateur: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

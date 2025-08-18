@@ -16,45 +16,49 @@ function Login({ setIsAuthenticated }) {
     setLoginInfo(prevInfo => ({ ...prevInfo, [name]: value }));
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    const { email, password } = loginInfo;
+const handleLogin = async (e) => {
+  e.preventDefault();
+  const { email, password } = loginInfo;
 
-    if (!email || !password) {
-      return handleError('Email and password are required');
-    }
+  if (!email || !password) {
+    return handleError('Email and password are required');
+  }
 
-    try {
-      const url = `http://localhost:5000/api/auth/login`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(loginInfo)
-      });
-      const result = await response.json();
-      const { message, token, user, error } = result;
+  try {
+    const url = `http://localhost:5000/api/auth/login`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(loginInfo)
+    });
 
-      if (token) {
-        localStorage.setItem('token', token);
-        if (user) {
-          // Stockage CORRECT de l'utilisateur
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-        if (setIsAuthenticated) {
-          setIsAuthenticated(true);
-        }
-        handleSuccess('Login successful!');
+    const result = await response.json();
+    const { message, token, user, error } = result;
+
+    if (token) {
+      // 🔹 Stocker le token et l'utilisateur
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      if (setIsAuthenticated) setIsAuthenticated(true);
+      handleSuccess('Login successful!');
+
+      // 🔹 Redirection selon rôle
+      if (user.role === "admin") {
         navigate('/home');
+      } else if (user.role === "responsable") {
+        navigate('/responsable-dashboard');
       } else {
-        const details = error?.details?.[0]?.message || message || 'Login failed. Please try again.';
-        handleError(details);
+        navigate('/home');
       }
-    } catch (err) {
-      handleError(err.message || 'An unexpected error occurred during login.');
+    } else {
+      handleError(error?.details?.[0]?.message || message || 'Login failed.');
     }
-  };
+  } catch (err) {
+    handleError(err.message || 'Unexpected error.');
+  }
+};
+
 
   return (
     <div

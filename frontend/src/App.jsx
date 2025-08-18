@@ -17,7 +17,7 @@ import AjouterFournisseur from './components/Fournisseur/AjouterFournisseur.jsx'
 import Fournisseur from './pages/fournisseur.jsx';
 import MvtCaisse from './pages/mvtCaisse';
 import Journaux from './pages/Journaux.jsx';
-import Transfert from './components/transfertCaisse//TransfertCaisse.jsx';
+import Transfert from './components/transfertCaisse/TransfertCaisse.jsx';
 import ProfileUser from './pages/ProfileUser.jsx';
 import ProfileImageUpload from './components/profile/ProfileImageUpload.jsx';
 import ProfilePasswordChange from './components/profile/ProfilePasswordChange.jsx';
@@ -26,28 +26,31 @@ import NatureChargeFormPage from './components/NatureDeCharge/NatureChargeFormPa
 import Layout from "./components/common/Layout";
 import TierFormPage from './components/Tier/TierFormPage.jsx';
 import ListeTransferts from './components/transfertCaisse/ListeTransferts.jsx';
-
-const PrivateRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('token');
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-};
+import PrivateRoute from "./components/common/PrivateRoute.jsx"; // ✅ Import correct
+import UserCreate from './components/User/UserCreate.jsx';
+import UserList from './components/User/UserList.jsx';
+import UserEdit from './components/User/UserEdit.jsx';
+import Notifications from './components/transfertCaisse/Notifications.jsx';
 
 function App() {
   return (
     <Routes>
-
-      {/* ✅ Redirection vers login par défaut */}
+      {/* Redirection vers login par défaut */}
       <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {/* 🟢 Public Routes */}
+      {/* Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-  
-
-      {/* 🔐 Protected Routes dans Layout */}
-      <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-
+      {/* Protected Routes dans Layout */}
+      <Route 
+        path="/" 
+        element={
+          <PrivateRoute>
+            <Layout />
+          </PrivateRoute>
+        }
+      >
         <Route path="home" element={<Home />} />
         <Route path="caisse" element={<Caisse />} />
         <Route path="nature-charge" element={<NatureCharge />} /> 
@@ -81,16 +84,22 @@ function App() {
         <Route path="journal-caisse" element={<Journaux />} />
         <Route path="transfert/nouveau" element={<Transfert />} />
         <Route path="transfert/historique" element={<ListeTransferts />} />
+
         {/* Profil */}
         <Route path="profile" element={<ProfileUser />} />
         <Route path="profile/password" element={<ProfilePasswordChange />} />
         <Route path="profile/image" element={<ProfileImageUpload />} />
 
+
+        <Route path="/users" element={<PrivateRoute role="admin"><UserList /></PrivateRoute>} />
+        <Route path="/users/create" element={<PrivateRoute role="admin"><UserCreate /></PrivateRoute>} />
+        <Route path="/users/edit/:id" element={<PrivateRoute role="admin"><UserEdit /></PrivateRoute>}/>
+  
+        <Route path="/notifications" element={<Notifications />} />
       </Route>
 
-      {/* page Not Found */}
+      {/* Page Not Found */}
       <Route path="*" element={<NotFound />} />
-
     </Routes>
   );
 }

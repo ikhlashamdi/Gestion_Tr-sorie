@@ -168,6 +168,8 @@ const Sidebar = () => {
           )}
         </div>
         <SidebarLink to="/journal-caisse" icon={<FileText size={24} />} label="Journal de caisse" dopen={dopen} />
+        <SidebarLink to="/users" icon={<Users size={24} />} label="Gestion des utilisateurs" dopen={dopen} />
+
       </nav>
     </aside>
   );

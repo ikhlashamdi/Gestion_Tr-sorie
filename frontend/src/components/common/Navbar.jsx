@@ -2,12 +2,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, UserCircle, Mail, Bell, MoreVertical, LogOut, User, X } from 'lucide-react';
 import axios from 'axios';
+import io from 'socket.io-client';
+
+// Initialisation de la connexion Socket.IO en dehors du composant
+// Cela évite de créer de nouvelles connexions à chaque rendu
+const socket = io('http://localhost:5000'); // Adaptez l'URL à votre backend
 
 const Navbar = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const profileMenuRef = useRef(null);
   const mobileMenuRef = useRef(null);
@@ -73,6 +79,42 @@ const Navbar = () => {
     }
   }, [token]);
 
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/notifications/count", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUnreadCount(res.data.count); 
+    } catch (err) {
+      console.error("Erreur de récupération du nombre de notifications :", err);
+      setUnreadCount(0);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchUnreadCount();
+
+      // Récupérer les informations de l'utilisateur pour rejoindre la "room" Socket.IO
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user && user._id) {
+        // Rejoindre la "room" Socket.IO de l'utilisateur
+        socket.emit('joinRoom', user._id);
+      }
+
+      // Écouter l'événement 'notifications_updated'
+      socket.on('notifications_updated', () => {
+        console.log("Événement 'notifications_updated' reçu. Mise à jour du compteur.");
+        fetchUnreadCount();
+      });
+
+      // Nettoyer l'écouteur à la sortie du composant
+      return () => {
+        socket.off('notifications_updated');
+      };
+    }
+  }, [token]);
+
   const handleProfileMenuToggle = () => {
     setProfileMenuOpen((prev) => !prev);
     setMobileMenuOpen(false);
@@ -93,12 +135,18 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem('user');
     navigate("/login", { replace: true });
     setProfileMenuOpen(false);
     setMobileMenuOpen(false);
   };
 
   const handleSearchChange = () => {};
+
+  const handleBellClick = () => {
+    navigate('/notifications');
+    setMobileMenuOpen(false);
+  };
 
   const renderProfileMenu = (
     <div
@@ -128,7 +176,7 @@ const Navbar = () => {
         <img
           src={profileImage}
           alt="Profil"
-          className="w-9 h-9 rounded-full object-cover  border-primary"
+          className="w-9 h-9 rounded-full object-cover border-primary"
         />
       ) : (
         <UserCircle className="w-6 h-6 text-primary" />
@@ -139,11 +187,11 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between h-16 px-4 bg-white text-dark-gray shadow-md">
       {/* Logo */}
-       <div className={`flex ml-2 items-center transition-all duration-300 ${searchExpanded ? 'hidden' : 'flex'} md:flex`}>
-                <Link to="/" className="text-xl font-semibold primary-cl-cl">
-                CAISSE
-                </Link>
-            </div>
+      <div className={`flex ml-2 items-center transition-all duration-300 ${searchExpanded ? 'hidden' : 'flex'} md:flex`}>
+        <Link to="/" className="text-xl font-semibold primary-cl-cl">
+          CAISSE
+        </Link>
+      </div>
 
       {/* Search */}
       <div className="relative flex-grow mx-4 max-w-md hidden md:flex items-center">
@@ -180,9 +228,11 @@ const Navbar = () => {
             <Mail className="w-6 h-6" />
             <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">4</span>
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded relative">
+          <button onClick={handleBellClick} className="p-2 hover:bg-gray-100 rounded relative">
             <Bell className="w-6 h-6" />
-            <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">17</span>
+            <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+              {unreadCount}
+            </span>
           </button>
           <div className="relative">{renderProfileButton}{renderProfileMenu}</div>
         </div>

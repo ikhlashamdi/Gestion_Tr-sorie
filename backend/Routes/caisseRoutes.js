@@ -2,7 +2,8 @@ const express = require('express');
 const Caisse = require('../Models/Caisse');
 const router = express.Router();
 const MvtCaisse = require("../Models/MvtCaisse");
-
+const verifyToken = require("../Middlewares/Auth"); // Le middleware qui vérifie le token
+const checkRole = require("../Middlewares/roleMiddleware");
 
 router.get('/', async (req, res) => {
   try {
@@ -75,20 +76,19 @@ router.post('/', async (req, res) => {
 });
 
 ///
-router.patch('/:id/activer', async (req, res) => {
-  try {
-    const caisse = await Caisse.findById(req.params.id);
-    if (!caisse) return res.status(404).send({ error: 'Caisse non trouvée' });
+router.patch('/:id/activer', verifyToken, checkRole(['admin']), async (req, res) => {
+  try {
+    const caisse = await Caisse.findById(req.params.id);
+    if (!caisse) return res.status(404).send({ error: 'Caisse non trouvée' });
 
-    caisse.active = !caisse.active;
-    await caisse.save();
+    caisse.active = !caisse.active;
+    await caisse.save();
 
-    res.status(200).send({ message: `Caisse ${caisse.active ? 'activée' : 'désactivée'}`, caisse });
-  } catch (err) {
-    res.status(500).send({ error: 'Erreur', details: err });
-  }
+    res.status(200).send({ message: `Caisse ${caisse.active ? 'activée' : 'désactivée'}`, caisse });
+  } catch (err) {
+    res.status(500).send({ error: 'Erreur', details: err });
+  }
 });
-
 // PATCH /api/caisses/:id/etat
 router.patch('/:id/etat', async (req, res) => {
   const { etat } = req.body;

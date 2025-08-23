@@ -401,12 +401,12 @@ export default function JournalCaisse() {
                         {new Date(mvt.date).toLocaleDateString("fr-FR")}
                       </td>
                       <td className="px-4 py-3">{mvt.description || "-"}</td>
-                      <td className="px-4 py-3">{mvt.natureCharge?.libelle || "-"}</td>
-                      <td className="px-4 py-3 font-medium ">
+                       <td className="px-4 py-3 font-medium ">
                         {mvt.typeMouvement === "encaissement" ? "Encaissement" : "Décaissement"}
                       </td>
                       <td className="px-4 py-3">{mvt.tierModel || "-"}</td>
                       <td className="px-4 py-3">{mvt.tier?.rsoc || mvt.tier?.libelle || "-"}</td>
+                      <td className="px-4 py-3">{mvt.natureCharge?.libelle || "-"}</td>
                       <td className="px-4 py-3 text-right font-medium">
                         {mvt.montant?.toLocaleString("fr-FR", {
                           minimumFractionDigits: 3,
@@ -470,57 +470,70 @@ export default function JournalCaisse() {
 
       {/* Style spécifique pour l'impression */}
       <style>{`
-        @media print {
-          body {
-            -webkit-print-color-adjust: exact;
-            font-size: 12pt;
-            margin: 0;
-            padding: 10px;
-          }
-          
-          #printable-journal {
-            width: 100% !important;
-            position: relative !important;
-          }
-          
-          #printable-journal table {
-            width: 100% !important;
-            border-collapse: collapse;
-            font-size: 10pt !important;
-          }
-          
-          #printable-journal th, 
-          #printable-journal td {
-            padding: 6px 4px !important;
-            border: 1px solid #ddd !important;
-          }
-          
-          #printable-journal thead {
-            display: table-header-group;
-            background: #e0e7ff !important;
-          }
-          
-          #printable-journal tr {
-            page-break-inside: avoid;
-          }
+  @media print {
+    /* Règle pour contrôler les marges de la page imprimée elle-même */
+    @page {
+      margin: 2;
+    }
 
-          /* Correction pour afficher tout le contenu */
-          body * {
-            visibility: hidden;
-          }
+    body {
+      -webkit-print-color-adjust: exact;
+      font-size: 12pt;
+      /* Supprime les marges et paddings du body */
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Réinitialisation générale pour tous les éléments pour l'impression */
+    *, *:before, *:after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box; /* S'assure que les paddings et bordures n'ajoutent pas à la taille */
+    }
 
-          #printable-journal, #printable-journal * {
-            visibility: visible;
-          }
+    #printable-journal {
+      width: 100% !important;
+      position: relative !important;
+    }
+    
+    #printable-journal table {
+      width: 100% !important;
+      border-collapse: collapse;
+      font-size: 10pt !important;
+    }
+    
+    #printable-journal th, 
+    #printable-journal td {
+      padding: 6px 4px !important;
+      border: 1px solid #ddd !important;
+    }
+    
+    #printable-journal thead {
+      display: table-header-group;
+      background: #e0e7ff !important;
+    }
+    
+    #printable-journal tr {
+      page-break-inside: avoid;
+    }
 
-          #printable-journal {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-        }
-      `}</style>
+    /* Correction pour afficher tout le contenu */
+    body * {
+      visibility: hidden;
+    }
+
+    #printable-journal, #printable-journal * {
+      visibility: visible;
+    }
+
+    #printable-journal {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+  }
+`}</style>
     </div>
   );
 }

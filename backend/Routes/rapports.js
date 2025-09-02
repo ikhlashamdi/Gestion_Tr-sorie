@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 const MvtCaisse = require("../Models/MvtCaisse");
 const Caisse = require("../Models/Caisse");
-const PDFDocument = require("pdfkit"); // npm install pdfkit
-const ExcelJS = require("exceljs");    // npm install exceljs
+const PDFDocument = require("pdfkit"); 
+const ExcelJS = require("exceljs");    
 
 // /api/rapports/journal-caisse?caisseId=XXX&format=pdf
 router.get("/journal-caisse", async (req, res) => {

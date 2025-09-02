@@ -357,10 +357,10 @@ export default function JournalCaisse() {
         {/* Print header */}
         <div className="hidden print:flex justify-between items-center mb-6 border-b border-gray-300 pb-2">
           <div className="flex items-center gap-4">
-            {/* The image URL is a placeholder and should be replaced with a valid path */}
-            <img src="/src/assets/lte.jpeg" alt="Logo" className="h-12" />
+            
+           {/*<img  alt="Logo" className="h-12" />*/}
             <div>
-              <h1 className="text-xl font-bold">{currentUser?.societe || "Nom de l'Entreprise"}</h1>
+              <h1 className="text-xl font-bold">{currentUser?.societe }</h1>
             </div>
           </div>
           <div className="text-right text-sm italic">{formatDateTimeNow()}</div>

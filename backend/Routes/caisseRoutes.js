@@ -84,72 +84,74 @@ router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', '
 
 // POST /api/caisses/ (Créer une nouvelle caisse)
 router.post('/', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
-    try {
-        const { libelle, soldeInitial, seuilMax = 0, utilisateur } = req.body;
+    try {
+        const { libelle, soldeInitial, seuilMax = 0, utilisateur, societe } = req.body;
 
-        // 1️⃣ Déterminer la société
-        let societeId;
-        if (req.user.role === 'admin') {
-            // L'admin ne peut créer que dans sa première société
-            if (!req.user.societes || req.user.societes.length === 0) {
-                return res.status(400).send({ error: "Admin sans société assignée." });
-            }
-            societeId = req.user.societes[0];
-        } else {
-            // Super-admin : doit passer la société dans le body
-            societeId = req.body.societe;
-        }
+        // 1️⃣ Déterminer la société en se basant sur le choix du frontend
+        let societeId;
+        if (req.user.role === 'super-admin') {
+            societeId = societe;
+        } else { // Rôle 'admin'
+            // L'administrateur peut créer dans n'importe laquelle de ses sociétés,
+            // donc on utilise l'ID envoyé par le frontend.
+            societeId = societe;
+        }
 
-        // 2️⃣ Validation des champs requis
-        if (!libelle || soldeInitial == null || !utilisateur || !societeId) {
-            return res.status(400).send({ error: "Champs requis manquants." });
-        }
+        // 2️⃣ Validation des champs requis
+        if (!libelle || soldeInitial == null || !utilisateur || !societeId) {
+            return res.status(400).send({ error: "Champs requis manquants." });
+        }
+        console.log("🟢 societeId reçu :", societeId);
+        console.log("🟢 sociétés dans le token :", req.user.societes);
+        console.log("🟢 formatées :", req.user.societes.map(s => s._id ? s._id.toString() : s.toString()));
 
-        // 3️⃣ Vérification appartenance société pour l'admin
-        if (req.user.role === 'admin' && !req.user.societes.map(s => s.toString()).includes(societeId.toString())) {
-            return res.status(403).send({ error: "Un administrateur ne peut créer des caisses que dans ses sociétés." });
-        }
+       const userSocieteIds = req.user.societes.map(s => s._id ? s._id.toString() : s.toString());
+        if (req.user.role === 'admin' && !userSocieteIds.includes(societeId.toString())) {
+            return res.status(403).send({ error: "Un administrateur ne peut créer des caisses que dans ses sociétés." });
+        }
 
-        // 4️⃣ Vérification que l'utilisateur assigné appartient bien à la société
-        const user = await User.findById(utilisateur);
-        if (!user || !user.societes.map(s => s.toString()).includes(societeId.toString())) {
-            return res.status(400).send({ error: "L'utilisateur assigné n'appartient pas à la société sélectionnée." });
-        }
 
-        // 5️⃣ Génération du code unique pour la caisse
-        let code;
-        let attempts = 0;
-        do {
-            const caissesCount = await Caisse.countDocuments({ societe: societeId });
-            code = `CA${String(caissesCount + 1 + attempts).padStart(2, "0")}`;
-            const exists = await Caisse.findOne({ code, societe: societeId });
-            if (!exists) break;
-            attempts++;
-        } while (attempts < 100);
+        // 4️⃣ Vérification que l'utilisateur assigné appartient bien à la société
+        const user = await User.findById(utilisateur);
+        if (!user || !user.societes.map(s => s.toString()).includes(societeId.toString())) {
+            return res.status(400).send({ error: "L'utilisateur assigné n'appartient pas à la société sélectionnée." });
+        }
 
-        if (!code) {
-            return res.status(500).send({ error: "Impossible de générer un code unique pour la caisse." });
-        }
+        // 5️⃣ Génération du code unique pour la caisse
+       // Génération du code unique pour la caisse
+const lastCaisse = await Caisse.findOne({ societe: societeId })
+    .sort({ code: -1 }) // trie décroissant sur le code
+    .exec();
 
-        // 6️⃣ Création de la caisse
-        const newCaisse = new Caisse({
-            code,
-            libelle,
-            soldeInitial,
-            seuilMax,
-            soldeActuel: soldeInitial,
-            utilisateur,
-            societe: societeId,
-            dateCreation: new Date()
-        });
+let nextNumber = 1;
+if (lastCaisse && lastCaisse.code) {
+    const match = lastCaisse.code.match(/CA(\d+)/);
+    if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+    }
+}
 
-        await newCaisse.save();
-        res.status(201).send(newCaisse);
+const code = `CA${String(nextNumber).padStart(2, "0")}`;
 
-    } catch (err) {
-        console.error("Erreur création caisse :", err);
-        res.status(500).send({ error: "Erreur création caisse", details: err.message });
-    }
+        // 6️⃣ Création de la caisse
+        const newCaisse = new Caisse({
+            code,
+            libelle,
+            soldeInitial,
+            seuilMax,
+            soldeActuel: soldeInitial,
+            utilisateur,
+            societe: societeId,
+            dateCreation: new Date()
+        });
+
+        await newCaisse.save();
+        res.status(201).send(newCaisse);
+
+    } catch (err) {
+        console.error("Erreur création caisse :", err);
+        res.status(500).send({ error: "Erreur création caisse", details: err.message });
+    }
 });
 
 // GET /api/caisses/:id (Obtenir une caisse par ID)

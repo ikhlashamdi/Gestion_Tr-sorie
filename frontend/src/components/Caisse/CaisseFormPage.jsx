@@ -63,7 +63,7 @@ export default function CaisseFormPage() {
       try {
         let apiUrl;
         if (currentUser.role === "admin" && currentUser.societes?.length > 0) {
-          apiUrl = `http://localhost:5000/api/users/societes/${currentUser.societes.join(",")}`;
+          apiUrl = `http://localhost:5000/api/users/societes/${currentUser.societes.map(s => s._id).join(",")}`;
         } else if (currentUser.role === "super-admin") {
           apiUrl = "http://localhost:5000/api/users";
         } else {
@@ -86,23 +86,28 @@ export default function CaisseFormPage() {
         setLoadingAssignableUsers(false);
       }
     };
-
     fetchAssignableUsers();
   }, [currentUser, token]);
 
-  // 3️⃣ Récupération des sociétés pour super-admin
+// 3️⃣ Récupération des sociétés en fonction du rôle de l'utilisateur
   useEffect(() => {
     const fetchSocietes = async () => {
-      if (!token || !currentUser) return;
-      if (currentUser.role !== "super-admin") return;
+      if (!currentUser) return;
 
       setLoadingSocietes(true);
       try {
-        const res = await axios.get("http://localhost:5000/api/companies", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAvailableSocietes(res.data);
-        setFilteredSocietes(res.data);
+        let societesData = [];
+        if (currentUser.role === "super-admin") {
+          const res = await axios.get("http://localhost:5000/api/companies", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          societesData = res.data;
+        } else if (currentUser.role === "admin" && currentUser.societes) {
+          societesData = currentUser.societes;
+        }
+        
+        setAvailableSocietes(societesData);
+        setFilteredSocietes(societesData);
       } catch (err) {
         console.error("Erreur récupération sociétés :", err);
         setError("❌ Impossible de charger les sociétés.");
@@ -153,26 +158,28 @@ export default function CaisseFormPage() {
   }, [fetchedCaisse, availableSocietes]);
 
   // 6️⃣ Gestion changement champs formulaire
-  const handleChange = (e) => {
+    const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "utilisateur") {
       const selectedUser = assignableUsers.find((user) => user._id === value);
+      
+      const userSocieteIds = selectedUser?.societes?.map(s => typeof s === "object" ? s._id : s) || [];
+      const filtered = availableSocietes.filter(soc => userSocieteIds.includes(soc._id));
 
-      if (selectedUser?.societes?.length > 0) {
-        const userSocieteIds = selectedUser.societes.map(s => typeof s === "object" ? s._id : s);
-        const filtered = availableSocietes.filter(soc => userSocieteIds.includes(soc._id));
-        setFilteredSocietes(filtered);
+      setFilteredSocietes(filtered);
 
-        setForm(prev => ({
-          ...prev,
-          utilisateur: value,
-          societe: filtered.length === 1 ? filtered[0]._id : "",
-        }));
-      } else {
-        setFilteredSocietes([]);
-        setForm(prev => ({ ...prev, utilisateur: value, societe: "" }));
+      let newSocieteValue = "";
+      if (filtered.length > 0) {
+        // ⭐ Mise à jour : S'il y a des sociétés filtrées, on prend la première par défaut.
+        newSocieteValue = filtered[0]._id;
       }
+
+      setForm(prev => ({
+        ...prev,
+        utilisateur: value,
+        societe: newSocieteValue,
+      }));
     } else {
       setForm(prev => ({
         ...prev,
@@ -180,6 +187,7 @@ export default function CaisseFormPage() {
       }));
     }
   };
+
 
   // 7️⃣ Soumission du formulaire
   const handleSubmit = async (e) => {
@@ -197,9 +205,10 @@ export default function CaisseFormPage() {
     }
 
     const payload = { ...form };
-    if (currentUser?.role === "admin") delete payload.societe;
-    if (currentUser?.role === "super-admin" && !payload.societe) {
-      setError("❌ La société est requise pour le Super-Admin.");
+    
+    // ⭐ AJOUT : Vérification côté client plus stricte
+    if ((currentUser?.role === "super-admin" || currentUser?.role === "admin") && !payload.societe) {
+      setError("❌ La société est requise pour créer une caisse.");
       return;
     }
 

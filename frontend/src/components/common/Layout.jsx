@@ -1,5 +1,5 @@
 import Navbar from "./NavBar";
-import Sidebar from "./SideBar";
+import Sidebar from "./Sidebar";
 import { useAppStore } from '../../store/appStore';
 import { Outlet } from "react-router-dom"; 
 

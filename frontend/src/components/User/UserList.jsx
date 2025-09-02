@@ -1,4 +1,3 @@
-// src/components/users/UserList.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../../api';
 import { handleError, handleSuccess } from '../../utils/toastUtils';
@@ -15,8 +14,10 @@ import {
   Trash2,
   Search,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Briefcase
 } from 'lucide-react';
+import AssignSocietesModal from './AssignSocietesModal.jsx';
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
@@ -29,6 +30,10 @@ export default function UserList() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  
+  // NOUVEAU: État et fonctions pour le modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userToAssign, setUserToAssign] = useState(null);
 
   // Charger les utilisateurs et les statistiques
   const fetchData = async () => {
@@ -62,6 +67,7 @@ export default function UserList() {
 
   // Supprimer un utilisateur
   const handleDelete = async (id) => {
+    // Remplacer window.confirm par un modal personnalisé pour un meilleur UX
     if (!window.confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return;
 
     try {
@@ -75,6 +81,7 @@ export default function UserList() {
 
   // Réinitialiser un mot de passe
   const handleResetPassword = async (userId) => {
+    // Remplacer window.confirm par un modal personnalisé
     if (window.confirm("Êtes-vous sûr de vouloir réinitialiser le mot de passe de cet utilisateur ?")) {
       try {
         await api.put(`/users/${userId}/reset-password`);
@@ -83,6 +90,19 @@ export default function UserList() {
         handleError(error.response?.data?.message || error.message);
       }
     }
+  };
+
+  // NOUVEAU: Fonctions pour ouvrir/fermer le modal
+  const handleOpenModal = (user) => {
+      setUserToAssign(user);
+      setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+      setIsModalOpen(false);
+      setUserToAssign(null);
+      // Optionnel: Re-fetch les données si l'affectation a été un succès
+      fetchData();
   };
 
   const handleSearch = (e) => {
@@ -150,24 +170,8 @@ export default function UserList() {
             <Plus size={16} />
             <span>Nouvel utilisateur</span>
           </Link>
-          <button 
-            onClick={fetchData}
-            disabled={refreshing}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              refreshing 
-                ? 'bg-gray-200 text-gray-500' 
-                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-            }`}
-          >
-            <RefreshCw size={16} className={`${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Actualisation...' : 'Actualiser'}
-          </button>
         </div>
       </div>
-
-      
-        
-        
 
       {/* Zone de recherche */}
       <div className="mb-6">
@@ -266,9 +270,13 @@ export default function UserList() {
                       {user.role}
                     </span>
                   </td>
+                  
                   <td className="px-4 py-3 text-sm text-gray-500">
-                    {user.societe || 'Aucune'}
+                      {user.societes && user.societes.length > 0 
+                          ? user.societes.map(s => s.name).join(', ') 
+                          : 'Aucune'}
                   </td>
+
                   <td className="px-4 py-3 text-center">
                     <div className="flex justify-center space-x-2">
                       <Link
@@ -292,6 +300,13 @@ export default function UserList() {
                       >
                         <Key size={16} />
                       </button>
+                      <button
+                        onClick={() => handleOpenModal(user)}
+                        className="p-2 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                        title="Affecter à une société"
+                      >
+                        <Briefcase size={16} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -308,6 +323,16 @@ export default function UserList() {
       </div>
 
       <ToastContainer position="bottom-right" />
+      
+      {/* NOUVEAU: Rendre le modal */}
+      {isModalOpen && (
+        <AssignSocietesModal 
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          user={userToAssign}
+          onAssignSuccess={handleCloseModal}
+        />
+      )}
     </div>
   );
 }

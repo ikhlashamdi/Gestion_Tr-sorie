@@ -36,11 +36,27 @@ export default function TransfertCaisse() {
   useEffect(() => {
     const fetchCaisses = async () => {
       setLoading(true);
+      // Récupérer le token du localStorage
+      const token = localStorage.getItem("token");
+      // Vérifier si le token existe avant de faire la requête
+      if (!token) {
+        setMessage({ text: "❌ Token d'authentification manquant pour récupérer les caisses.", type: "error" });
+        setLoading(false);
+        return;
+      }
       try {
-        const res = await axios.get("http://localhost:5000/api/caisses");
+        // Ajouter les en-têtes d'autorisation à la requête GET
+        const res = await axios.get("http://localhost:5000/api/caisses", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setCaisses(res.data);
       } catch (err) {
-        setMessage({ text: "❌ Impossible de récupérer les caisses.", type: "error" });
+        // Gérer spécifiquement l'erreur 401 si elle se produit ici
+        if (err.response && err.response.status === 401) {
+            setMessage({ text: "❌ Accès non autorisé pour récupérer les caisses.", type: "error" });
+        } else {
+            setMessage({ text: "❌ Impossible de récupérer les caisses.", type: "error" });
+        }
       } finally {
         setLoading(false);
       }
@@ -52,7 +68,7 @@ export default function TransfertCaisse() {
   const handleTransfert = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const token = localStorage.getItem("token"); // 💡 Récupération du token
+    const token = localStorage.getItem("token");
 
     if (!currentUser) {
       setMessage({ text: "❌ Utilisateur non trouvé.", type: "error" });
@@ -60,7 +76,7 @@ export default function TransfertCaisse() {
       return;
     }
 
-    if (!token) { // 💡 Vérification que le token existe
+    if (!token) {
         setMessage({ text: "❌ Token d'authentification manquant.", type: "error" });
         setIsSubmitting(false);
         return;
@@ -73,7 +89,6 @@ export default function TransfertCaisse() {
     }
 
     try {
-      // 💡 Ajout des en-têtes d'autorisation à la requête POST
       await axios.post("http://localhost:5000/api/transferts/demander", {
         caisseSource,
         caisseDestination,
@@ -151,7 +166,7 @@ export default function TransfertCaisse() {
               <option value="">Sélectionnez une caisse</option>
               {caisses.map((caisse) => (
                 <option key={caisse._id} value={caisse._id}>
-                  {caisse.libelle} - Solde: {caisse.soldeActuel?.toFixed(2) || 0.000} DT
+                  {caisse.libelle}
                 </option>
               ))}
             </select>
@@ -191,7 +206,7 @@ export default function TransfertCaisse() {
               <option value="">Sélectionnez une caisse</option>
               {caisses.map((caisse) => (
                 <option key={caisse._id} value={caisse._id} disabled={caisse._id === caisseSource}>
-                  {caisse.libelle} - Solde: {caisse.soldeActuel?.toFixed(2) || 0.000} DT
+                  {caisse.libelle}
                 </option>
               ))}
             </select>

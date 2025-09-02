@@ -20,7 +20,8 @@ import {
   ArrowRightCircle,
   ArrowRightCircleIcon,
   ArrowUpRightFromCircle,
-  ArrowRightLeft
+  ArrowRightLeft,
+  StopCircle
 } from 'lucide-react';
 import { getCookie, setCookie } from '../../utils/cookieSetterAndGetter';
 
@@ -169,6 +170,7 @@ const Sidebar = () => {
         </div>
         <SidebarLink to="/journal-caisse" icon={<FileText size={24} />} label="Journal de caisse" dopen={dopen} />
         <SidebarLink to="/users" icon={<Users size={24} />} label="Gestion des utilisateurs" dopen={dopen} />
+        <SidebarLink to="/societes" icon={<StopCircle size={24} />} label="Gestion des sociétés" dopen={dopen} />
 
       </nav>
     </aside>

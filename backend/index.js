@@ -1,13 +1,17 @@
 require('dotenv').config();
 const express = require('express');
-const http = require('http'); // 🔹 Importation du module http
-const { Server } = require('socket.io'); // 🔹 Importation de Server depuis socket.io
+const http = require('http');
+const { Server } = require('socket.io');
 const connectToDatabase = require('./Models/db');
 const cors = require('cors');
 const path = require("path");
+const bcrypt = require('bcrypt'); // 🔹 Import de bcrypt pour hacher le mot de passe
 
-// Import modèles et routes
+// Import des modèles
 const User = require('./Models/User');
+const Company = require('./Models/Company'); 
+
+// Import des routes
 const authRouter = require('./Routes/AuthRouter');
 const caisseRoutes = require('./Routes/caisseRoutes');
 const natureChargeRoutes = require('./Routes/natureChargeRoutes');
@@ -23,13 +27,10 @@ const mouvementsRoutes = require('./Routes/mouvementRoutes');
 const rapportRoutes = require("./Routes/rapports");
 const transfertRoutes = require("./Routes/transfertRoutes");
 const notificationRoutes = require('./Routes/notificationRoutes');
+const companyRoutes = require('./Routes/companyRoutes'); 
 
 const app = express();
-
-// 🔹 Crée une instance de serveur HTTP à partir de l'application Express
 const server = http.createServer(app);
-
-// 🔹 Configure l'instance de Socket.IO et l'attache au serveur HTTP
 const io = new Server(server, {
     cors: {
         origin: "http://localhost:3000",
@@ -37,11 +38,9 @@ const io = new Server(server, {
     }
 });
 
-// 🔹 Gère les connexions Socket.IO
 io.on('connection', (socket) => {
     console.log(`✅ Un utilisateur est connecté via Socket.IO: ${socket.id}`);
     
-    // Votre logique de socket existante irait ici
     socket.on('join_room', (userId) => {
         socket.join(userId);
         console.log(`✅ Utilisateur ${userId} a rejoint sa room.`);
@@ -52,30 +51,53 @@ io.on('connection', (socket) => {
     });
 });
 
-// ✅ Autoriser CORS pour toutes les origines
 app.use(cors());
-
-// ✅ Middleware pour lire JSON
 app.use(express.json());
-
-// 💡 Passe l'instance de 'io' à l'application Express
 app.set("io", io);
 
-// ✅ Connexion à MongoDB
+// ✅ Connexion à MongoDB et initialisation des données
 connectToDatabase().then(async () => {
-    const adminExists = await User.findOne({ role: "admin" });
+    // 1. Création du SUPER-ADMIN par défaut (s'il n'existe pas)
+    const superAdminExists = await User.findOne({ role: 'super-admin' });
+    if (!superAdminExists) {
+        const passwordHash = await bcrypt.hash("superadmin1234", 10);
+        const superAdminUser = new User({
+            name: "Super Admin",
+            email: "superadmin@gmail.com",
+            password: passwordHash,
+            role: "super-admin",
+            societe: null // ⚠️ Très important : le super-admin n'est lié à aucune société
+        });
+        await superAdminUser.save();
+        console.log("✅ Super-Admin par défaut créé : superadmin@gmail.com / superadmin1234");
+    } else {
+        console.log("✅ Super-Admin par défaut déjà existant.");
+    }
+
+    // 2. Création de la société par défaut
+    const companyName = "Société Générale";
+    let defaultCompany = await Company.findOne({ name: companyName });
+    if (!defaultCompany) {
+        defaultCompany = new Company({ name: companyName });
+        await defaultCompany.save();
+        console.log(`✅ Société par défaut "${companyName}" créée.`);
+    }
+
+    // 3. Création de l'ADMIN par défaut (s'il n'existe pas)
+    const adminExists = await User.findOne({ email: "admin@gmail.com" });
     if (!adminExists) {
+        const passwordHash = await bcrypt.hash("admin1234", 10);
         const adminUser = new User({
             name: "Admin",
             email: "admin@gmail.com",
-            password: "admin1234",
+            password: passwordHash,
             role: "admin",
-            societe: "Société Générale"
+            societe: defaultCompany._id // 🔹 L'ID de l'objet Company est utilisé
         });
         await adminUser.save();
         console.log("✅ Admin par défaut créé : admin@gmail.com / admin1234");
     } else {
-        console.log("✅ Admin déjà existant");
+        console.log("✅ Admin par défaut déjà existant.");
     }
 });
 
@@ -98,8 +120,8 @@ app.use('/api/mouvements', mouvementsRoutes);
 app.use("/api/rapports", rapportRoutes);
 app.use("/api/transferts", transfertRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/companies', companyRoutes);
 
-// ✅ Démarrer le serveur HTTP et Socket.IO
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`✅ Serveur démarré sur le port ${PORT}`);

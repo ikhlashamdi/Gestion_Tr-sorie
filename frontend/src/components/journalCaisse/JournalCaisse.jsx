@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
-const PAGE_SIZE = 8; // Nombre de lignes par page
+// Define the number of rows per page for pagination
+const PAGE_SIZE = 8;
 
+// Define the main React component for the Cash Journal
 export default function JournalCaisse() {
+  // State hooks for component data and UI status
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCaisseCode, setSelectedCaisseCode] = useState("");
@@ -15,16 +18,16 @@ export default function JournalCaisse() {
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState("");
 
-    const [user, setUser] = useState(null);
-  // Pagination
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Tri
+  // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: "date", direction: "asc" });
 
-  // Etat pour détecter impression et désactiver pagination
+  // State to handle printing and disable pagination
   const [isPrinting, setIsPrinting] = useState(false);
-    // Récupérer infos utilisateur (nom société)
+
+  // Effect hook to fetch current user information
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const token = localStorage.getItem("token");
@@ -39,8 +42,8 @@ export default function JournalCaisse() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCurrentUser(res.data);
-       
       } catch (err) {
+        console.error("Erreur chargement utilisateur :", err);
         setError("❌ Impossible de récupérer l'utilisateur connecté.");
       } finally {
         setLoadingUser(false);
@@ -49,13 +52,12 @@ export default function JournalCaisse() {
     fetchCurrentUser();
   }, []);
 
+  // Effect hook to set up print event listeners
   useEffect(() => {
     const handleBeforePrint = () => {
       setIsPrinting(true);
-      // Force un re-render immédiat
-      setMouvements([...mouvements]);
     };
-    
+
     const handleAfterPrint = () => setIsPrinting(false);
 
     window.addEventListener('beforeprint', handleBeforePrint);
@@ -65,12 +67,24 @@ export default function JournalCaisse() {
       window.removeEventListener('beforeprint', handleBeforePrint);
       window.removeEventListener('afterprint', handleAfterPrint);
     };
-  }, [mouvements]); // Ajouter mouvements comme dépendance
+  }, []);
 
+  // Effect hook to fetch cash registers (caisses)
   useEffect(() => {
     const fetchCaisses = async () => {
+      // FIX: Get the token from local storage to authorize the request
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Token non trouvé. Impossible de charger les caisses.");
+        setError("Impossible de charger les caisses. Vous devez être connecté.");
+        return;
+      }
+
       try {
-        const res = await axios.get("http://localhost:5000/api/caisses");
+        // FIX: Add the Authorization header to the request
+        const res = await axios.get("http://localhost:5000/api/caisses", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setCaisses(res.data);
       } catch (err) {
         console.error("Erreur chargement caisses :", err);
@@ -80,6 +94,7 @@ export default function JournalCaisse() {
     fetchCaisses();
   }, []);
 
+  // Function to fetch the journal movements
   const fetchJournal = async () => {
     if (!startDate || !endDate) {
       setError("Veuillez sélectionner une date de début et de fin.");
@@ -93,16 +108,28 @@ export default function JournalCaisse() {
 
     setLoading(true);
     setError("");
+
+    // FIX: Get the token and add Authorization header for this request as well
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("❌ Vous devez être connecté pour consulter le journal.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const params = { start: startDate, end: endDate };
       if (selectedCaisseCode) {
         params.caisse = selectedCaisseCode;
       }
 
-      const res = await axios.get("http://localhost:5000/api/mouvements", { params });
+      const res = await axios.get("http://localhost:5000/api/mouvements", {
+        params,
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMouvements(res.data);
       setSuccess(true);
-      setCurrentPage(1); // reset page au chargement
+      setCurrentPage(1);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Erreur chargement journal :", err);
@@ -112,7 +139,7 @@ export default function JournalCaisse() {
     }
   };
 
-  // Fonction pour trier
+  // Memoized function for sorting movements
   const sortedMouvements = useMemo(() => {
     let sortableItems = [...mouvements];
     if (sortConfig !== null) {
@@ -141,17 +168,16 @@ export default function JournalCaisse() {
     return sortableItems;
   }, [mouvements, sortConfig]);
 
-  // Pagination - désactivée si impression
+  // Memoized function for pagination
   const paginatedMouvements = useMemo(() => {
     if (isPrinting) {
-      // Affiche tout sans pagination à l'impression
       return sortedMouvements;
     }
     const startIndex = (currentPage - 1) * PAGE_SIZE;
     return sortedMouvements.slice(startIndex, startIndex + PAGE_SIZE);
   }, [sortedMouvements, currentPage, isPrinting]);
 
-  // Totaux calculés sur mouvements affichés (page ou tout à l'impression)
+  // Calculations for total encaissement, decaissement, and solde
   const totalEncaissement = paginatedMouvements
     .filter((mvt) => mvt.typeMouvement === "encaissement")
     .reduce((sum, mvt) => sum + mvt.montant, 0);
@@ -162,7 +188,7 @@ export default function JournalCaisse() {
 
   const solde = totalEncaissement - totalDecaissement;
 
-  // Gestion clic sur en-tête pour tri
+  // Handler for sorting table columns
   const requestSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -171,19 +197,22 @@ export default function JournalCaisse() {
     setSortConfig({ key, direction });
   };
 
-  // Flèche tri
+  // Helper function to show sort arrow
   const getSortArrow = (key) => {
     if (sortConfig.key !== key) return null;
     return sortConfig.direction === "asc" ? " ▲" : " ▼";
   };
 
+  // Calculate total pages for pagination
   const totalPages = Math.ceil(sortedMouvements.length / PAGE_SIZE);
 
+  // Helper function to format the current date and time
   const formatDateTimeNow = () => {
     const now = new Date();
     return `Édité le ${now.toLocaleDateString("fr-FR")} à ${now.toLocaleTimeString("fr-FR")}`;
   };
 
+  // Handler for print button
   const handlePrint = () => {
     setIsPrinting(true);
     setTimeout(() => {
@@ -192,7 +221,8 @@ export default function JournalCaisse() {
   };
 
   return (
-    <div className="px-6 py-6 bg-white rounded-xl shadow-sm">
+    <div className="px-6 py-6 bg-white rounded-xl shadow-sm font-sans text-gray-800">
+      {/* Header section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Journal de Caisse</h2>
@@ -223,6 +253,7 @@ export default function JournalCaisse() {
         </div>
       </div>
 
+      {/* Error and success messages */}
       {error && (
         <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>
       )}
@@ -233,6 +264,7 @@ export default function JournalCaisse() {
         </div>
       )}
 
+      {/* Filter and search controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 print:hidden">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Date début *</label>
@@ -320,30 +352,35 @@ export default function JournalCaisse() {
         </div>
       </div>
 
+      {/* Printable content section */}
       <div id="printable-journal">
-        {/* CORRECTION : EN-TÊTE D'IMPRESSION DÉPLACÉ ICI */}
+        {/* Print header */}
         <div className="hidden print:flex justify-between items-center mb-6 border-b border-gray-300 pb-2">
           <div className="flex items-center gap-4">
+            {/* The image URL is a placeholder and should be replaced with a valid path */}
             <img src="/src/assets/lte.jpeg" alt="Logo" className="h-12" />
             <div>
-             <h1 className="text-xl font-bold">{currentUser?.societe  || "Nom de l'Entreprise"}</h1>
+              <h1 className="text-xl font-bold">{currentUser?.societe || "Nom de l'Entreprise"}</h1>
             </div>
           </div>
           <div className="text-right text-sm italic">{formatDateTimeNow()}</div>
         </div>
 
+        {/* Print title and date range */}
         <div className="hidden print:block text-center font-bold text-lg mt-6 mb-2">EXTRAIT CAISSE</div>
         <div className="hidden print:block font-semibold text-center text-sm mb-4">
           DU {new Date(startDate).toLocaleDateString("fr-FR")} AU{" "}
           {new Date(endDate).toLocaleDateString("fr-FR")}
         </div>
 
+        {/* Display movements or a message if none are found */}
         {mouvements.length === 0 ? (
           <div className="text-center py-8 text-gray-500 border border-gray-200 rounded-lg">
             Aucun mouvement trouvé pour cette période
           </div>
         ) : (
           <>
+            {/* Table of movements */}
             <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm mb-2">
               <table className="min-w-full table-auto border-collapse">
                 <thead className="bg-gradient-to-r from-purple-50 to-indigo-50 cursor-pointer select-none">
@@ -354,7 +391,6 @@ export default function JournalCaisse() {
                     >
                       Date{getSortArrow("date")}
                     </th>
-                    
                     <th
                       className="px-4 py-3 text-left text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300"
                       onClick={() => requestSort("description")}
@@ -379,7 +415,6 @@ export default function JournalCaisse() {
                     >
                       Raison Sociale{getSortArrow("tier")}
                     </th>
-                    
                     <th
                       className="px-4 py-3 text-left text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300"
                       onClick={() => requestSort("natureCharge")}
@@ -401,7 +436,7 @@ export default function JournalCaisse() {
                         {new Date(mvt.date).toLocaleDateString("fr-FR")}
                       </td>
                       <td className="px-4 py-3">{mvt.description || "-"}</td>
-                       <td className="px-4 py-3 font-medium ">
+                      <td className="px-4 py-3 font-medium">
                         {mvt.typeMouvement === "encaissement" ? "Encaissement" : "Décaissement"}
                       </td>
                       <td className="px-4 py-3">{mvt.tierModel || "-"}</td>
@@ -420,7 +455,7 @@ export default function JournalCaisse() {
               </table>
             </div>
 
-            {/* Résumé total */}
+            {/* Total summary section */}
             <div className="text-right font-semibold px-4 py-2 border-t border-gray-200 mb-6">
               <p>
                 Total Encaissement :{" "}
@@ -442,7 +477,7 @@ export default function JournalCaisse() {
               </p>
             </div>
 
-            {/* Pagination */}
+            {/* Pagination controls (hidden on print) */}
             {!isPrinting && (
               <div className="flex justify-center items-center gap-2 mb-6 print:hidden">
                 <button
@@ -468,72 +503,72 @@ export default function JournalCaisse() {
         )}
       </div>
 
-      {/* Style spécifique pour l'impression */}
+      {/* CSS for print media */}
       <style>{`
-  @media print {
-    /* Règle pour contrôler les marges de la page imprimée elle-même */
-    @page {
-      margin: 2;
-    }
+        @media print {
+          /* Règle pour contrôler les marges de la page imprimée elle-même */
+          @page {
+            margin: 2;
+          }
 
-    body {
-      -webkit-print-color-adjust: exact;
-      font-size: 12pt;
-      /* Supprime les marges et paddings du body */
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    /* Réinitialisation générale pour tous les éléments pour l'impression */
-    *, *:before, *:after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box; /* S'assure que les paddings et bordures n'ajoutent pas à la taille */
-    }
+          body {
+            -webkit-print-color-adjust: exact;
+            font-size: 12pt;
+            /* Supprime les marges et paddings du body */
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          
+          /* Réinitialisation générale pour tous les éléments pour l'impression */
+          *, *:before, *:after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* S'assure que les paddings et bordures n'ajoutent pas à la taille */
+          }
 
-    #printable-journal {
-      width: 100% !important;
-      position: relative !important;
-    }
-    
-    #printable-journal table {
-      width: 100% !important;
-      border-collapse: collapse;
-      font-size: 10pt !important;
-    }
-    
-    #printable-journal th, 
-    #printable-journal td {
-      padding: 6px 4px !important;
-      border: 1px solid #ddd !important;
-    }
-    
-    #printable-journal thead {
-      display: table-header-group;
-      background: #e0e7ff !important;
-    }
-    
-    #printable-journal tr {
-      page-break-inside: avoid;
-    }
+          #printable-journal {
+            width: 100% !important;
+            position: relative !important;
+          }
+          
+          #printable-journal table {
+            width: 100% !important;
+            border-collapse: collapse;
+            font-size: 10pt !important;
+          }
+          
+          #printable-journal th, 
+          #printable-journal td {
+            padding: 6px 4px !important;
+            border: 1px solid #ddd !important;
+          }
+          
+          #printable-journal thead {
+            display: table-header-group;
+            background: #e0e7ff !important;
+          }
+          
+          #printable-journal tr {
+            page-break-inside: avoid;
+          }
 
-    /* Correction pour afficher tout le contenu */
-    body * {
-      visibility: hidden;
-    }
+          /* Correction pour afficher tout le contenu */
+          body * {
+            visibility: hidden;
+          }
 
-    #printable-journal, #printable-journal * {
-      visibility: visible;
-    }
+          #printable-journal, #printable-journal * {
+            visibility: visible;
+          }
 
-    #printable-journal {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-    }
-  }
-`}</style>
+          #printable-journal {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+        }
+      `}</style>
     </div>
   );
 }

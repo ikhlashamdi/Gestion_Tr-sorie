@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const caisseSchema = new mongoose.Schema({
     code: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
     },
     libelle: {
         type: String,
@@ -45,6 +46,12 @@ const caisseSchema = new mongoose.Schema({
     required: false
   },
   
+  societe: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Company",
+  required: true
+},
+
 etat: {
   type: String,
   enum: ['brouillon', 'confirme', 'annule'],
@@ -54,6 +61,7 @@ etat: {
     type: Boolean,
     default: true
   }});
+  
   
 
 const Caisse = mongoose.model('Caisse', caisseSchema);

@@ -31,6 +31,9 @@ import UserCreate from './components/User/UserCreate.jsx';
 import UserList from './components/User/UserList.jsx';
 import UserEdit from './components/User/UserEdit.jsx';
 import Notifications from './components/transfertCaisse/Notifications.jsx';
+import SocieteList from './components/company/SocieteList.jsx';
+import SocieteCreate from './components/company/CreateCompany.jsx';
+import SocieteEdit from './components/company/SocieteEdit.jsx';
 
 function App() {
   return (
@@ -91,10 +94,15 @@ function App() {
         <Route path="profile/image" element={<ProfileImageUpload />} />
 
 
-        <Route path="/users" element={<PrivateRoute role="admin"><UserList /></PrivateRoute>} />
-        <Route path="/users/create" element={<PrivateRoute role="admin"><UserCreate /></PrivateRoute>} />
-        <Route path="/users/edit/:id" element={<PrivateRoute role="admin"><UserEdit /></PrivateRoute>}/>
+        <Route path="/users" element={<PrivateRoute role="super-admin"><UserList /></PrivateRoute>} />
+        <Route path="/users/create" element={<PrivateRoute role="super-admin"><UserCreate /></PrivateRoute>} />
+        <Route path="/users/edit/:id" element={<PrivateRoute role="super-admin"><UserEdit /></PrivateRoute>}/>
+        
+        <Route path="/societes" element={<PrivateRoute role="super-admin"><SocieteList /></PrivateRoute>} />
+        <Route path="/societes/create" element={<PrivateRoute role="super-admin"><SocieteCreate /></PrivateRoute>} />
+        <Route path="/societes/edit/:id" element={<PrivateRoute role="super-admin"><SocieteEdit /></PrivateRoute>}/>
   
+
         <Route path="/notifications" element={<Notifications />} />
       </Route>
 

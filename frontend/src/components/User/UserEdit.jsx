@@ -16,7 +16,7 @@ function UserEdit() {
     societe: ''
   });
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
-
+  const [companies, setCompanies] = useState([]);
   // Charger les données de l'utilisateur
   const fetchUser = async () => {
     setLoading(true);
@@ -36,8 +36,18 @@ function UserEdit() {
   };
 
   useEffect(() => {
-    fetchUser();
-  }, [id]);
+  const fetchCompanies = async () => {
+    try {
+      const { data } = await api.get('/companies');
+      setCompanies(data);
+    } catch (error) {
+      handleError("Erreur lors du chargement des sociétés.");
+    }
+  };
+
+  fetchUser();
+  fetchCompanies();
+}, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -170,15 +180,24 @@ function UserEdit() {
               Société
             </label>
             <div className="relative">
-              <input 
-                type="text" 
-                name="societe" 
-                value={formData.societe} 
-                onChange={handleChange} 
-                placeholder="Nom de la société" 
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
-              />
+              <select
+                name="societe"
+                value={formData.societe}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
+                required
+              >
+                <option value="" disabled>Sélectionner une société</option>
+                {companies.map(company => (
+                  <option key={company._id} value={company._id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
               <Briefcase className="absolute left-3 top-3.5 text-gray-400" size={18} />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15 9.707l-1.414-1.414L10 11.293 6.414 7.707 5 9.121z"/></svg>
+              </div>
             </div>
           </div>
         </div>

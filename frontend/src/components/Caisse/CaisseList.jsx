@@ -1,4 +1,3 @@
-// src/pages/caisse/CaisseList.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -6,33 +5,76 @@ import CaisseTable from "./CaisseTable";
 
 export default function CaisseList() {
   const [caisses, setCaisses] = useState([]);
+  const [token, setToken] = useState(null);
   const navigate = useNavigate();
 
-  const fetchCaisses = async (search = "") => {
+  // 🔹 Charger le token depuis le localStorage au montage
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      fetchCaisses(storedToken); // fetch initial avec le token
+    }
+
+    // Gestion du changement de société
+    const handleCompanyChange = () => {
+      if (storedToken) fetchCaisses(storedToken);
+    };
+    window.addEventListener("companyChanged", handleCompanyChange);
+
+    return () => {
+      window.removeEventListener("companyChanged", handleCompanyChange);
+    };
+  }, []);
+
+  // 🔹 Fonction pour récupérer les caisses
+  const fetchCaisses = async (tokenParam, search = "") => {
+    const t = tokenParam || token;
+    if (!t) {
+      console.warn("Token non disponible. Impossible de récupérer les caisses.");
+      return;
+    }
+
     try {
-      const res = await axios.get(`http://localhost:5000/api/caisses?search=${search}`);
+      const selectedCompanyId = localStorage.getItem("selectedCompanyId"); // société sélectionnée
+
+      const res = await axios.get("http://localhost:5000/api/caisses", {
+        headers: {
+          Authorization: `Bearer ${t}`,
+        },
+        params: {
+          search,
+          companyId: selectedCompanyId,
+        },
+      });
+
       setCaisses(res.data);
     } catch (err) {
-      console.error("Erreur récupération des caisses", err);
+      console.error("Erreur récupération des caisses :", err);
     }
   };
 
+  // 🔹 Supprimer une caisse
   const handleDelete = async (id) => {
     if (!window.confirm("Supprimer cette caisse ?")) return;
+
     try {
-      await axios.delete(`http://localhost:5000/api/caisses/${id}`);
-      fetchCaisses();
+      await axios.delete(`http://localhost:5000/api/caisses/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      fetchCaisses(); // rafraîchir la liste après suppression
     } catch (err) {
       console.error("Erreur suppression :", err);
     }
   };
 
+  // 🔹 Éditer une caisse
   const handleEdit = (caisse) => navigate(`/caisses/${caisse._id}`);
-  const handleAdd = () => navigate("/caisses/nouveau");
 
-  useEffect(() => {
-    fetchCaisses();
-  }, []);
+  // 🔹 Ajouter une nouvelle caisse
+  const handleAdd = () => navigate("/caisses/nouveau");
 
   return (
     <CaisseTable
@@ -40,7 +82,7 @@ export default function CaisseList() {
       onEdit={handleEdit}
       onDelete={handleDelete}
       onAdd={handleAdd}
-      onSearch={fetchCaisses}
+      onSearch={(search) => fetchCaisses(null, search)}
     />
   );
 }

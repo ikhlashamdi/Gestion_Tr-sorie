@@ -223,19 +223,7 @@ const handleToggleActive = async (id) => {
         <table className="w-full">
           <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
             <tr>
-              <th 
-                className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider cursor-pointer"
-                onClick={() => handleSort("code")}
-              >
-                <div className="flex items-center">
-                  Code
-                  {sortConfig.key === "code" && (
-                    sortConfig.direction === "ascending" ? 
-                    <ChevronUp size={14} className="ml-1" /> : 
-                    <ChevronDown size={14} className="ml-1" />
-                  )}
-                </div>
-              </th>
+          
               <th 
                 className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider cursor-pointer"
                 onClick={() => handleSort("libelle")}
@@ -301,7 +289,6 @@ const handleToggleActive = async (id) => {
             ) : (
               filteredCaisses.map((caisse) => (
                 <tr key={caisse._id} className="hover:bg-purple-50 transition-colors">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{caisse.code}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.libelle}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.soldeInitial?.toFixed(2)}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.seuilMax?.toFixed(2)}</td>
@@ -310,7 +297,10 @@ const handleToggleActive = async (id) => {
                   }`}>
                     {caisse.soldeActuel?.toFixed(2)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{caisse.utilisateur?.societe}</td>
+                 <td className="px-4 py-3 text-sm text-gray-700">
+                    {caisse.societe ? caisse.societe.name : 'Aucune'}
+                  </td>
+
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.utilisateur?.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {new Date(caisse.dateCreation).toLocaleDateString("fr-FR")}

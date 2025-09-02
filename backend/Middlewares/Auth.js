@@ -1,24 +1,31 @@
 const jwt = require('jsonwebtoken');
 const User = require('../Models/User');
 
+// In your `verifyToken` middleware
 const verifyToken = async (req, res, next) => {
-    const authHeader = req.header('Authorization');
-    if (!authHeader) return res.status(401).json({ message: 'Token manquant' });
-
-    const token = authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Token invalide' });
+    const token = req.headers["authorization"]?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Token manquant" });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select("-password");
-        if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
+        // Ensure you populate the `societes` field correctly
+        const user = await User.findById(decoded.id).populate("societes");
 
-        req.user = user; // 🔹 On met directement l'objet utilisateur
+        if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
+
+        req.user = {
+            _id: user._id,
+            id: user._id, // Add id for consistency
+            role: user.role,
+            // Pass the populated societes array
+            // It will be an array of objects, each with an _id and other fields
+            societes: user.societes
+        };
+
         next();
-    } catch (error) {
-        res.status(400).json({ message: 'Token invalide' });
+    } catch (err) {
+        return res.status(403).json({ message: "Token invalide" });
     }
 };
-
 
 module.exports = verifyToken;

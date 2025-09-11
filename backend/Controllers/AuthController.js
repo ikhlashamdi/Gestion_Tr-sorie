@@ -1,6 +1,8 @@
 const User = require('../Models/User');
+const Company = require('../Models/Company');
 const jwt = require('jsonwebtoken');
 const { registerValidation, loginValidation } = require('../Middlewares/AuthValidation');
+const bcrypt = require('bcrypt');
 
 // Enregistrer un utilisateur
 const registerUser = async (req, res) => {
@@ -8,16 +10,41 @@ const registerUser = async (req, res) => {
     if (error) return res.status(400).json({ message: error.details[0].message });
 
     try {
-        const userExists = await User.findOne({ email: req.body.email });
-        if (userExists) return res.status(400).json({ message: 'Utilisateur déjà existant' });
+        const { name, email, password, societe, role } = req.body;
 
-        const newUser = new User(req.body);
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: 'Utilisateur déjà existant' });
+        }
+
+        let company = await Company.findOne({ name: societe });
+        if (!company) {
+            company = await Company.create({ name: societe });
+        }
+         
+        
+        const newUser = new User({
+            name,
+            email,
+            password,
+            societes: [company._id],
+            role
+        });
+
         await newUser.save();
-        res.status(201).json({ success: true, message: 'Utilisateur enregistré avec succès' });
+
+    res.status(201).json({ 
+        success: true, 
+        message: 'Utilisateur enregistré avec succès', 
+        userId: newUser._id, 
+        role: newUser.role 
+    });
     } catch (error) {
+        console.error('Erreur inscription:', error);
         res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
     }
 };
+
 
 // Connecter un utilisateur
 const loginUser = async (req, res) => {

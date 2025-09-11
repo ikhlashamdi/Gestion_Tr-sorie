@@ -175,7 +175,6 @@ if (mouvement.etat === "annule" && etat === "valide") {
 
 
 
-
 router.get('/historique/:caisseId', async (req, res) => {
   const { caisseId } = req.params;
 
@@ -195,9 +194,17 @@ router.get('/historique/:caisseId', async (req, res) => {
     })
       .sort({ date: 1 })
       .populate({ path: 'natureCharge', select: 'libelle code' })
-      .populate({ path: 'tier', select: 'libelle code' })
       .populate({ path: 'utilisateur', select: 'name' })
       .lean();
+
+    // 🔹 Résolution manuelle du tier selon tierModel
+    const tierModels = { Client, Fournisseur, Vehicule, Personnel, Banque, Tiers };
+    for (let mvt of mouvements) {
+      if (mvt.tier && mvt.tierModel && tierModels[mvt.tierModel]) {
+        const Model = tierModels[mvt.tierModel];
+        mvt.tier = await Model.findById(mvt.tier).select('libelle code rsoc').lean() || null;
+      }
+    }
 
     let solde = caisse.soldeInitial || 0;
     const historique = mouvements.map(mvt => {
@@ -209,11 +216,14 @@ router.get('/historique/:caisseId', async (req, res) => {
 
       return {
         _id: mvt._id,
-        date:mvt.date,
-        typeMouvement : mvt.typeMouvement,
+        date: mvt.date,
+        typeMouvement: mvt.typeMouvement,
         montant: mvt.montant,
-        nature: mvt.natureCharge?.libelle || null,
-        tier: mvt.tier?.libelle || null,
+        natureCharge: mvt.natureCharge?._id || null,
+        tier: mvt.tier?._id || null,
+        tierLibelle: mvt.tier?.libelle || null,   // 👈 maintenant dispo
+        tierCode: mvt.tier?.code || null,
+        tierModel: mvt.tierModel || null,
         utilisateur: mvt.utilisateur?.name || null,
         description: mvt.description || '',
         soldeCourant: solde
@@ -232,5 +242,6 @@ router.get('/historique/:caisseId', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 module.exports = router;

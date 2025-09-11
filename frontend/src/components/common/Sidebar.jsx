@@ -15,27 +15,24 @@ import {
   User,
   Truck,
   Building2,
-  PlusCircle ,
+  PlusCircle,
   Clock,
-  ArrowRightCircle,
-  ArrowRightCircleIcon,
-  ArrowUpRightFromCircle,
   ArrowRightLeft,
   StopCircle
 } from 'lucide-react';
-import { getCookie, setCookie } from '../../utils/cookieSetterAndGetter';
 
 const Sidebar = () => {
+  // Récupère l'état d'ouverture/fermeture et la fonction de mise à jour depuis le store
   const dopen = useAppStore((state) => state.dopen);
   const updateDopen = useAppStore((state) => state.updateOpen);
+  
   const sidebarRef = useRef(null);
   const location = useLocation();
 
   const [ficheBaseOpen, setFicheBaseOpen] = useState(false);
-
   const [sidebarWidth, setSidebarWidth] = useState(getSidebarWidth());
   const [transfertOpen, setTransfertOpen] = useState(false);
-
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false); 
 
   function getSidebarWidth() {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -44,6 +41,7 @@ const Sidebar = () => {
     return dopen ? 'min(max(20vw, 175px), 275px)' : '64px';
   }
 
+  // Gère le redimensionnement de la barre latérale
   useEffect(() => {
     function handleResize() {
       setSidebarWidth(getSidebarWidth());
@@ -53,14 +51,28 @@ const Sidebar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [dopen]);
 
+  // Initialise l'état `dopen` et le rôle de l'utilisateur depuis localStorage
   useEffect(() => {
-    const cookieVal = getCookie('dopen');
-    if (cookieVal === 'false' && dopen !== false) updateDopen(false);
-    if (cookieVal === 'true' && dopen !== true) updateDopen(true);
-  }, []);
+    const savedDopen = localStorage.getItem('dopen');
+    if (savedDopen !== null) {
+      updateDopen(savedDopen === 'true');
+    }
 
-   useEffect(() => {
-    setCookie('dopen', dopen);
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        setIsSuperAdmin(user.role === 'super-admin');
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+        setIsSuperAdmin(false);
+      }
+    }
+  }, []); // Exécuté une seule fois au montage du composant
+
+  // Sauvegarde l'état de `dopen` dans localStorage à chaque changement
+  useEffect(() => {
+    localStorage.setItem('dopen', dopen);
   }, [dopen]);
 
   useEffect(() => {
@@ -89,7 +101,6 @@ const Sidebar = () => {
     );
     setTransfertOpen(isInTransfert);
   }, [location.pathname]);
-
 
   return (
     <aside
@@ -163,15 +174,18 @@ const Sidebar = () => {
 
           {transfertOpen && dopen && (
             <div className="pl-10 space-y-1 mt-1">
-              <SubLink to="/transfert/nouveau" label="Nouveau transfert" icon={<PlusCircle  size={18} />} />
+              <SubLink to="/transfert/nouveau" label="Nouveau transfert" icon={<PlusCircle size={18} />} />
               <SubLink to="/transfert/historique" label="Historique" icon={<Clock size={18} />} />
             </div>
           )}
         </div>
         <SidebarLink to="/journal-caisse" icon={<FileText size={24} />} label="Journal de caisse" dopen={dopen} />
-        <SidebarLink to="/users" icon={<Users size={24} />} label="Gestion des utilisateurs" dopen={dopen} />
-        <SidebarLink to="/societes" icon={<StopCircle size={24} />} label="Gestion des sociétés" dopen={dopen} />
-
+        {isSuperAdmin && (
+          <>
+            <SidebarLink to="/users" icon={<Users size={24} />} label="Gestion des utilisateurs" dopen={dopen} />
+            <SidebarLink to="/societes" icon={<StopCircle size={24} />} label="Gestion des sociétés" dopen={dopen} />
+          </>
+        )}
       </nav>
     </aside>
   );

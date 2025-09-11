@@ -28,12 +28,9 @@ export default function CaisseTable({
 
       try {
         const res = await fetch("http://localhost:5000/api/users/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Erreur récupération utilisateur");
-
         const data = await res.json();
         setCurrentUser(data);
       } catch (err) {
@@ -41,7 +38,6 @@ export default function CaisseTable({
         setCurrentUser(null);
       }
     };
-
     fetchUser();
   }, []);
 
@@ -51,40 +47,28 @@ export default function CaisseTable({
     onSearch(value);
   };
 
-// CaisseTable.jsx
-const handleToggleActive = async (id) => {
-  try {
-    // Get the token from localStorage
-    const token = localStorage.getItem("token");
+  const handleToggleActive = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Jeton d'authentification manquant. Veuillez vous reconnecter.");
 
-    // Check if the token exists before making the request
-    if (!token) {
-      throw new Error("Jeton d'authentification manquant. Veuillez vous reconnecter.");
+      const res = await fetch(`http://localhost:5000/api/caisses/${id}/activer`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Échec du changement de statut");
+      }
+
+      onSearch("");
+    } catch (err) {
+      console.error("Erreur activation/désactivation :", err);
+      alert("Erreur: " + err.message);
     }
+  };
 
-    const res = await fetch(`http://localhost:5000/api/caisses/${id}/activer`, {
-      method: "PATCH",
-      // Add the headers with the Authorization token
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json', // It's good practice to include this header
-      },
-    });
-
-    if (!res.ok) {
-      // You can get more details from the server's response
-      const errorData = await res.json();
-      throw new Error(errorData.error || "Échec du changement de statut");
-    }
-
-    // This re-fetches the list, which is a good approach
-    onSearch("");
-  } catch (err) {
-    console.error("Erreur activation/désactivation :", err);
-    // You might want to show a user-friendly error message here
-    alert("Erreur: " + err.message);
-  }
-};
   const handleSort = (key) => {
     let direction = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -94,43 +78,44 @@ const handleToggleActive = async (id) => {
   };
 
   const getSortedItems = () => {
-    const sortableItems = [...caisses];
+    let sortableItems = [...caisses];
+
+    // Tri par défaut sur la date (plus récent au plus ancien)
+    sortableItems.sort((a, b) => new Date(b.dateCreation) - new Date(a.dateCreation));
+
+    // Tri manuel si l'utilisateur a choisi une colonne
     if (sortConfig.key) {
       sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (sortConfig.key.toLowerCase().includes("date")) {
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
+
+        if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
         return 0;
       });
     }
+
     return sortableItems;
   };
 
   const handleFilterChange = (filterName, value) => {
-    setActiveFilters({
-      ...activeFilters,
-      [filterName]: value
-    });
+    setActiveFilters({ ...activeFilters, [filterName]: value });
   };
 
   const applyFilters = (caisse) => {
-    // Status filter
     if (activeFilters.status && activeFilters.status !== "all") {
       if (activeFilters.status === "active" && !caisse.active) return false;
       if (activeFilters.status === "inactive" && caisse.active) return false;
     }
-    
-    // Amount filters
-    if (activeFilters.minAmount && caisse.soldeActuel < parseFloat(activeFilters.minAmount)) {
-      return false;
-    }
-    if (activeFilters.maxAmount && caisse.soldeActuel > parseFloat(activeFilters.maxAmount)) {
-      return false;
-    }
-    
+
+    if (activeFilters.minAmount && caisse.soldeActuel < parseFloat(activeFilters.minAmount)) return false;
+    if (activeFilters.maxAmount && caisse.soldeActuel > parseFloat(activeFilters.maxAmount)) return false;
+
     return true;
   };
 
@@ -138,12 +123,11 @@ const handleToggleActive = async (id) => {
 
   return (
     <div className="px-6 py-6 bg-white rounded-xl shadow-sm">
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Caisse</h2>
-    
         </div>
-        
         <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -153,18 +137,20 @@ const handleToggleActive = async (id) => {
             <span>Filtres</span>
             {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
-          
-          <button
-            onClick={onAdd}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-lg hover:from-purple-700 hover:to-indigo-800 transition-colors shadow-md"
-          >
-            <Plus size={16} />
-            <span>Nouvelle caisse</span>
-          </button>
+
+          {currentUser && currentUser.role === "super-admin" && (
+            <button
+              onClick={onAdd}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-lg hover:from-purple-700 hover:to-indigo-800 transition-colors shadow-md"
+            >
+              <Plus size={16} />
+              <span>Nouvelle caisse</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Filters panel */}
+      {/* Filters */}
       {showFilters && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -180,7 +166,7 @@ const handleToggleActive = async (id) => {
                 <option value="inactive">Inactif</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Solde min </label>
               <input
@@ -191,7 +177,7 @@ const handleToggleActive = async (id) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Solde max </label>
               <input
@@ -206,6 +192,7 @@ const handleToggleActive = async (id) => {
         </div>
       )}
 
+      {/* Search */}
       <div className="mb-6">
         <div className="flex items-center bg-white p-3 rounded-lg border border-gray-300 shadow-sm">
           <Search size={20} className="text-gray-500 mr-2" />
@@ -219,11 +206,11 @@ const handleToggleActive = async (id) => {
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
         <table className="w-full">
           <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
             <tr>
-          
               <th 
                 className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider cursor-pointer"
                 onClick={() => handleSort("libelle")}
@@ -231,48 +218,43 @@ const handleToggleActive = async (id) => {
                 <div className="flex items-center">
                   Libellé
                   {sortConfig.key === "libelle" && (
-                    sortConfig.direction === "ascending" ? 
-                    <ChevronUp size={14} className="ml-1" /> : 
-                    <ChevronDown size={14} className="ml-1" />
+                    sortConfig.direction === "ascending" ? <ChevronUp size={14} /> : <ChevronDown size={14} />
                   )}
                 </div>
               </th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider">
-                Solde Initial 
-              </th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider">
-                Seuil Max 
-              </th>
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Solde Initial</th>
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Seuil Max</th>
               <th 
                 className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider cursor-pointer"
                 onClick={() => handleSort("soldeActuel")}
               >
                 <div className="flex items-center">
-                  Solde Actuel 
+                  Solde Actuel
                   {sortConfig.key === "soldeActuel" && (
-                    sortConfig.direction === "ascending" ? 
-                    <ChevronUp size={14} className="ml-1" /> : 
-                    <ChevronDown size={14} className="ml-1" />
+                    sortConfig.direction === "ascending" ? <ChevronUp size={14} /> : <ChevronDown size={14} />
                   )}
                 </div>
               </th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider">
-                Société
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Société</th>
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Responsable</th>
+              <th 
+                className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider cursor-pointer"
+                onClick={() => handleSort("dateCreation")}
+              >
+                <div className="flex items-center">
+                  Date
+                  {sortConfig.key === "dateCreation" && (
+                    sortConfig.direction === "ascending" ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                  )}
+                </div>
               </th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider">
-                Responsable
-              </th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider">
-                Date
-              </th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider">
-                Statut
-              </th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800  tracking-wider">
-                Actions
-              </th>
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Statut</th>
+              {currentUser?.role === "admin" || currentUser?.role === "super-admin" && (
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Actions</th>
+              )}
             </tr>
           </thead>
+
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredCaisses.length === 0 ? (
               <tr>
@@ -280,9 +262,7 @@ const handleToggleActive = async (id) => {
                   <div className="flex flex-col items-center justify-center">
                     <Search size={40} className="text-gray-400 mb-3" />
                     <p className="text-gray-600 font-medium">Aucune caisse trouvée</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Essayez de modifier vos filtres ou votre recherche
-                    </p>
+                    <p className="text-sm text-gray-500 mt-1">Essayez de modifier vos filtres ou votre recherche</p>
                   </div>
                 </td>
               </tr>
@@ -292,62 +272,36 @@ const handleToggleActive = async (id) => {
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.libelle}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.soldeInitial?.toFixed(2)}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.seuilMax?.toFixed(2)}</td>
-                  <td className={`px-4 py-3 text-sm font-medium ${
-                    caisse.soldeActuel > caisse.seuilMax ? 'text-red-600' : 'text-gray-700'
-                  }`}>
+                  <td className={`px-4 py-3 text-sm font-medium ${caisse.soldeActuel > caisse.seuilMax ? 'text-red-600' : 'text-gray-700'}`}>
                     {caisse.soldeActuel?.toFixed(2)}
                   </td>
-                 <td className="px-4 py-3 text-sm text-gray-700">
-                    {caisse.societe ? caisse.societe.name : 'Aucune'}
-                  </td>
-
+                  <td className="px-4 py-3 text-sm text-gray-700">{caisse.societe?.name || "Aucune"}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{caisse.utilisateur?.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {new Date(caisse.dateCreation).toLocaleDateString("fr-FR")}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{new Date(caisse.dateCreation).toLocaleDateString("fr-FR")}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        caisse.active 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${caisse.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                       {caisse.active ? "Actif" : "Inactif"}
                     </span>
                   </td>
-  <td className="px-4 py-3 text-center">
-    <div className="flex justify-center space-x-2">
-      <button 
-        onClick={() => onEdit(caisse)} 
-        className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
-        title="Modifier"
-      >
-        <Pencil size={16} />
-      </button>
-      <button 
-        onClick={() => onDelete(caisse._id)} 
-        className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-        title="Supprimer"
-      >
-        <Trash2 size={16} />
-      </button>
-      {/* La condition pour l'affichage du bouton d'activation/désactivation */}
-     {currentUser && currentUser.role === 'admin' && (
-        <button 
-          onClick={() => handleToggleActive(caisse._id)} 
-          className={`p-2 rounded-full transition-colors ${
-            caisse.active 
-              ? "bg-gray-100 text-gray-600 hover:bg-gray-200" 
-              : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-          }`}
-          title={caisse.active ? "Désactiver" : "Activer"}
-        >
-          <Power size={16} />
-        </button>
-      )}
-    </div>
-  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex justify-center space-x-2">
+                      {currentUser?.role === "super-admin" && (
+                        <>
+                          <button onClick={() => onEdit(caisse)} className="p-2 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Modifier">
+                            <Pencil size={16} />
+                          </button>
+                          <button onClick={() => onDelete(caisse._id)} className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors" title="Supprimer">
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
+                      {currentUser?.role === "admin" && (
+                        <button onClick={() => handleToggleActive(caisse._id)} className={`p-2 rounded-full transition-colors ${caisse.active ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-purple-100 text-purple-600 hover:bg-purple-200"}`} title={caisse.active ? "Désactiver" : "Activer"}>
+                          <Power size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -356,9 +310,7 @@ const handleToggleActive = async (id) => {
       </div>
 
       <div className="mt-6 flex justify-between items-center">
-        <div className="text-sm text-gray-500">
-          {filteredCaisses.length} caisses affichées
-        </div>
+        <div className="text-sm text-gray-500">{filteredCaisses.length} caisses affichées</div>
       </div>
     </div>
   );

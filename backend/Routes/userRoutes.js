@@ -155,4 +155,25 @@ router.get('/societes/:ids', verifyToken, checkRole(['super-admin', 'admin']), a
   }
 });
 
+
+// Supprimer un utilisateur
+router.delete('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
+    try {
+        const userToDelete = await User.findById(req.params.id);
+        if (!userToDelete) return res.status(404).json({ message: "Utilisateur non trouvé" });
+
+        // Vérification pour les admins
+        if (req.user.role === 'admin') {
+            const intersection = userToDelete.societes.map(s => s.toString()).some(s => req.user.societes.includes(s));
+            if (!intersection) return res.status(403).json({ message: "Accès refusé." });
+        }
+
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ message: "Utilisateur supprimé avec succès" });
+    } catch (error) {
+        console.error("Erreur lors de la suppression :", error.message);
+        res.status(500).json({ message: "Erreur serveur", error: error.message });
+    }
+});
+
 module.exports = router;

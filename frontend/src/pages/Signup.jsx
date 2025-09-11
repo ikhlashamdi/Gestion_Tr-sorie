@@ -8,7 +8,8 @@ function Signup() {
         name: '',
         email: '',
         password: '',
-        societe: '' 
+        societe: '',
+        role: 'caissier' // valeur par défaut
     });
 
     const navigate = useNavigate();
@@ -21,13 +22,12 @@ function Signup() {
     const handleSignup = async (e) => {
         e.preventDefault();
 
-        const { name, email, password } = signupInfo;
+        const { name, email, password, societe, role } = signupInfo;
 
-      if (!name || !email || !password || !signupInfo.societe) {
-        toast.error('Tous les champs (nom, email, mot de passe et société) sont requis.');
-        return;
-      }
-
+        if (!name || !email || !password || !societe || !role) {
+            toast.error('Tous les champs sont requis.');
+            return;
+        }
 
         try {
             const response = await fetch('http://localhost:5000/api/auth/register', {
@@ -38,7 +38,6 @@ function Signup() {
                 body: JSON.stringify(signupInfo),
             });
 
-            // Vérifier le code de statut HTTP pour voir si la réponse est correcte
             const result = await response.json();
 
             if (!response.ok) {
@@ -46,10 +45,9 @@ function Signup() {
                 return;
             }
 
-            // Vérifiez si le champ "success" existe et est true
             if (result.success) {
                 toast.success('Inscription réussie! Redirection vers la page de connexion.');
-                navigate('/login');  // Rediriger vers la page de connexion après l'inscription réussie
+                navigate('/login');
             } else {
                 toast.error(result.message || 'Une erreur est survenue.');
             }
@@ -59,166 +57,191 @@ function Signup() {
         }
     };
 
-return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: "var(--light-gray)" }}
-    >
-      <div
-        className="bg-white p-8 md:p-12 rounded-lg w-full max-w-md shadow-xl"
-        style={{ color: "var(--dark-gray)" }}
-      >
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          <span style={{ color: "var(--primary)" }}>Sign up</span> for an account
-        </h1>
-
-        <form onSubmit={handleSignup} className="space-y-6">
-
-          {/* Name Input */}
-          <div className="relative">
-            <input
-              id="name"
-              type="text"
-              name="name"
-              value={signupInfo.name}
-              onChange={handleChange}
-              placeholder=" "
-              className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-              style={{
-                borderColor: "var(--med-light-gray)",
-                backgroundColor: "white",
-              }}
-            />
-            <label
-              htmlFor="name"
-              className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-              style={{
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
+    return (
+        <div
+            className="min-h-screen flex items-center justify-center"
+            style={{ backgroundColor: "var(--light-gray)" }}
+        >
+            <div
+                className="bg-white p-8 md:p-12 rounded-lg w-full max-w-md shadow-xl"
+                style={{ color: "var(--dark-gray)" }}
             >
-              Name
-            </label>
-          </div>
-          {/* Societe Input */}
-<div className="relative">
-  <input
-    id="societe"
-    type="text"
-    name="societe"
-    value={signupInfo.societe}
-    onChange={handleChange}
-    placeholder=" "
-    className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-    style={{
-      borderColor: "var(--med-light-gray)",
-      backgroundColor: "white",
-    }}
-  />
-  <label
-    htmlFor="societe"
-    className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-    style={{
-      top: "50%",
-      transform: "translateY(-50%)",
-    }}
-  >
-    Société
-  </label>
-</div>
+                <h1 className="text-3xl font-bold mb-8 text-center">
+                    <span style={{ color: "var(--primary)" }}>Sign up</span> for an account
+                </h1>
 
+                <form onSubmit={handleSignup} className="space-y-6">
 
-          {/* Email Input */}
-          <div className="relative">
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={signupInfo.email}
-              onChange={handleChange}
-              placeholder=" "
-              className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-              style={{
-                borderColor: "var(--med-light-gray)",
-                backgroundColor: "white",
-              }}
-            />
-            <label
-              htmlFor="email"
-              className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-              style={{
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            >
-              Email
-            </label>
-          </div>
+                    {/* Name Input */}
+                    <div className="relative">
+                        <input
+                            id="name"
+                            type="text"
+                            name="name"
+                            value={signupInfo.name}
+                            onChange={handleChange}
+                            placeholder=" "
+                            className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
+                            style={{
+                                borderColor: "var(--med-light-gray)",
+                                backgroundColor: "white",
+                            }}
+                        />
+                        <label
+                            htmlFor="name"
+                            className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
+                            style={{
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                            }}
+                        >
+                            Name
+                        </label>
+                    </div>
 
-          {/* Password Input */}
-          <div className="relative">
-            <input
-              id="password"
-              type="password"
-              name="password"
-              value={signupInfo.password}
-              onChange={handleChange}
-              placeholder=" "
-              className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-              style={{
-                borderColor: "var(--med-light-gray)",
-                backgroundColor: "white",
-              }}
-            />
-            <label
-              htmlFor="password"
-              className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-              style={{
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            >
-              Password
-            </label>
-          </div>
+                    {/* Société Input */}
+                    <div className="relative">
+                        <input
+                            id="societe"
+                            type="text"
+                            name="societe"
+                            value={signupInfo.societe}
+                            onChange={handleChange}
+                            placeholder=" "
+                            className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
+                            style={{
+                                borderColor: "var(--med-light-gray)",
+                                backgroundColor: "white",
+                            }}
+                        />
+                        <label
+                            htmlFor="societe"
+                            className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
+                            style={{
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                            }}
+                        >
+                            Société
+                        </label>
+                    </div>
 
-          <style>{`
-            input.peer:focus + label,
-            input.peer:not(:placeholder-shown) + label {
-              top: 0 !important;
-              left: 0.5rem !important;
-              font-size: 12px;
-              color: var(--primary);
-            }
-            input.peer:focus {
-              border-color: var(--primary);
-            }
-          `}</style>
+                    {/* Email Input */}
+                    <div className="relative">
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            value={signupInfo.email}
+                            onChange={handleChange}
+                            placeholder=" "
+                            className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
+                            style={{
+                                borderColor: "var(--med-light-gray)",
+                                backgroundColor: "white",
+                            }}
+                        />
+                        <label
+                            htmlFor="email"
+                            className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
+                            style={{
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                            }}
+                        >
+                            Email
+                        </label>
+                    </div>
 
-          <button
-            type="submit"
-            className="w-full text-white font-semibold text-lg rounded-md cursor-pointer py-2.5 transition duration-200 shadow-md hover:shadow-lg"
-            style={{ backgroundColor: "var(--primary)" }}
-          >
-            Signup
-          </button>
+                    {/* Password Input */}
+                    <div className="relative">
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            value={signupInfo.password}
+                            onChange={handleChange}
+                            placeholder=" "
+                            className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
+                            style={{
+                                borderColor: "var(--med-light-gray)",
+                                backgroundColor: "white",
+                            }}
+                        />
+                        <label
+                            htmlFor="password"
+                            className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
+                            style={{
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                            }}
+                        >
+                            Password
+                        </label>
+                    </div>
 
-          <p className="text-center text-base mt-2" style={{ color: "var(--gray)" }}>
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              style={{ color: "var(--accent)", fontWeight: "500" }}
-              className="hover:underline"
-            >
-              Login
-            </Link>
-          </p>
-        </form>
+                    {/* Role Select */}
+                    <div className="relative">
+                        <select
+                            id="role"
+                            name="role"
+                            value={signupInfo.role}
+                            onChange={handleChange}
+                            className="w-full border rounded-md px-3 py-2 text-base focus:outline-none transition-colors duration-150"
+                            style={{
+                                borderColor: "var(--med-light-gray)",
+                                backgroundColor: "white",
+                            }}
+                        >   
+                            <option value="" disabled>Choisir un rôle</option>
+                            <option value="caissier">Caissier</option>
+                            <option value="responsable">Responsable</option>
+                        </select>
+                        <label
+                            htmlFor="role"
+                            className="absolute -top-2 left-2 text-sm text-gray bg-white px-1"
+                        >
+                            Rôle
+                        </label>
+                    </div>
 
-        <ToastContainer />
-      </div>
-    </div>
-  );
+                    <style>{`
+                        input.peer:focus + label,
+                        input.peer:not(:placeholder-shown) + label {
+                            top: 0 !important;
+                            left: 0.5rem !important;
+                            font-size: 12px;
+                            color: var(--primary);
+                        }
+                        input.peer:focus {
+                            border-color: var(--primary);
+                        }
+                    `}</style>
+
+                    <button
+                        type="submit"
+                        className="w-full text-white font-semibold text-lg rounded-md cursor-pointer py-2.5 transition duration-200 shadow-md hover:shadow-lg"
+                        style={{ backgroundColor: "var(--primary)" }}
+                    >
+                        Signup
+                    </button>
+
+                    <p className="text-center text-base mt-2" style={{ color: "var(--gray)" }}>
+                        Already have an account?{" "}
+                        <Link
+                            to="/login"
+                            style={{ color: "var(--accent)", fontWeight: "500" }}
+                            className="hover:underline"
+                        >
+                            Login
+                        </Link>
+                    </p>
+                </form>
+
+                <ToastContainer />
+            </div>
+        </div>
+    );
 }
 
 export default Signup;

@@ -6,11 +6,11 @@ const UserSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6 },
-    profileImage: { type: Buffer, default: "" },
+    profileImage: { type: String, default: "" },
     role: {
         type: String,
         enum: ["super-admin", "admin", "responsable", "caissier"],
-        default: 'caissier'
+        required: true
     },
     societes: [{
         type: mongoose.Schema.Types.ObjectId,

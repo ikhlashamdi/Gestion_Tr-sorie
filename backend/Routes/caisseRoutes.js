@@ -9,18 +9,6 @@ const MvtCaisse = require("../Models/MvtCaisse");
 const verifyToken = require("../Middlewares/Auth"); // Assurez-vous que ce chemin est correct
 const checkRole = require("../Middlewares/roleMiddleware"); // Assurez-vous que ce chemin est correct
 
-// La logique est la suivante :
-// 1. verifyToken : vérifie l'authentification et attache l'utilisateur (req.user)
-// 2. checkRole(...) : vérifie si le rôle de l'utilisateur est autorisé
-// 3. La fonction de la route : applique un filtre sur les données en fonction du rôle
-
-// =================================================================
-// ROUTES PUBLIQUES (aucune dans ce cas, toutes les routes sont sécurisées)
-// =================================================================
-
-// =================================================================
-// ROUTES POUR ADMINS & SUPER-ADMIN
-// =================================================================
 
 // GET /api/caisses/ (Voir toutes les caisses avec un filtre de recherche)
 router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
@@ -83,7 +71,7 @@ router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', '
 });
 
 // POST /api/caisses/ (Créer une nouvelle caisse)
-router.post('/', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
+router.post('/', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const { libelle, soldeInitial, seuilMax = 0, utilisateur, societe } = req.body;
 
@@ -189,7 +177,7 @@ router.get('/:id', verifyToken, checkRole(['super-admin', 'admin', 'responsable'
 
 
 // PUT /api/caisses/:id (Mettre à jour une caisse)
-router.put('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
+router.put('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const caisse = await Caisse.findById(req.params.id);
         if (!caisse) return res.status(404).send({ error: 'Caisse non trouvée' });

@@ -8,12 +8,12 @@ export default function CaisseList() {
   const [token, setToken] = useState(null);
   const navigate = useNavigate();
 
-  // 🔹 Charger le token depuis le localStorage au montage
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
-      fetchCaisses(storedToken); // fetch initial avec le token
+      fetchCaisses(storedToken); 
     }
 
     // Gestion du changement de société

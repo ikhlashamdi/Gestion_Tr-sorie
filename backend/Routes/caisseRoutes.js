@@ -9,6 +9,111 @@ const MvtCaisse = require("../Models/MvtCaisse");
 const verifyToken = require("../Middlewares/Auth"); // Assurez-vous que ce chemin est correct
 const checkRole = require("../Middlewares/roleMiddleware"); // Assurez-vous que ce chemin est correct
 
+// Ancien code (qui calculait le solde à partir des mouvements)
+// router.get("/:id/solde", ..., async (req, res) => { /* ... calcul des mouvements */ });
+
+// GET /api/caisses/by-user/:userId
+router.get("/by-user/:userId", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // 1. Vérification des permissions
+        const userRole = req.user.role;
+        // Récupère les IDs des sociétés de l'utilisateur connecté
+        const userSocietesIds = req.user.societes ? req.user.societes.map(s => s._id.toString()) : [];
+        
+        // CHECK CAISSIER: Un caissier ne peut voir que SES PROPRES caisses via cette route
+        if (userRole === 'caissier' && req.user._id.toString() !== userId.toString()) {
+             return res.status(403).json({ message: "Accès refusé. En tant que caissier, vous ne pouvez consulter que vos propres caisses via cet endpoint." });
+        }
+
+        // Initialisation de la requête MongoDB
+        let query = { utilisateur: userId };
+        
+        // CHECK RESPONSABLE: Un responsable peut uniquement voir les caisses d'utilisateurs appartenant à ses sociétés.
+        if (userRole === 'responsable') {
+            if (userSocietesIds.length === 0) {
+                return res.status(403).json({ message: "Accès refusé. Vous n'êtes responsable d'aucune société." });
+            }
+            // Ajoute un filtre pour que la caisse appartienne à l'une des sociétés du responsable
+            query.societe = { $in: userSocietesIds };
+        } 
+        
+        // 2. Vérification de l'existence de l'utilisateur (bonne pratique)
+        const targetUser = await User.findById(userId);
+        if (!targetUser) {
+            return res.status(404).json({ message: "Utilisateur cible non trouvé." });
+        }
+
+        // 3. Récupération des caisses
+        const caisses = await Caisse.find(query)
+            .populate("utilisateur", "name role") // Peupler l'utilisateur assigné
+            .populate("societe", "name")         // Peupler la société
+            .select("-__v");                     // Exclure le champ de version
+
+        res.status(200).send(caisses);
+
+    } catch (err) {
+        console.error("❌ Erreur API /by-user:", err);
+        // Gestion de l'erreur si l'ID n'est pas un ObjectId valide
+        if (err instanceof mongoose.Error.CastError) {
+            return res.status(400).send({ error: "ID utilisateur ou de caisse invalide." });
+        }
+        res.status(500).send({ error: 'Erreur lors de la récupération des caisses par utilisateur', details: err.message });
+    }
+});
+
+// CONSERVER CETTE VERSION
+
+// GET /api/caisses/:id/solde (Calculer le solde de SA propre caisse)
+router.get("/:id/solde", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
+    try {
+        const caisseId = req.params.id;
+
+        // Vérif ObjectId valide
+        if (!mongoose.Types.ObjectId.isValid(caisseId)) {
+            return res.status(400).json({ message: "ID de caisse invalide" });
+        }
+
+        const caisse = await Caisse.findById(caisseId);
+        if (!caisse) {
+            return res.status(404).json({ message: "Caisse non trouvée" });
+        }
+
+        const userRole = req.user.role;
+        const userSocietesIds = req.user.societes.map(s => s._id.toString());
+        const caisseSocieteId = caisse.societe ? caisse.societe.toString() : null;
+
+        // Vérif appartenance société
+        if (userRole !== 'super-admin' && caisseSocieteId && !userSocietesIds.includes(caisseSocieteId)) {
+            return res.status(403).json({ message: "Accès refusé. Cette caisse n'appartient pas à votre société." });
+        }
+
+      // Gardez la vérification du caissier attitré si vous souhaitez la maintenir
+        if (userRole === 'caissier' && caisse.utilisateur && caisse.utilisateur.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Accès refusé. Vous n'êtes pas le caissier de cette caisse." });
+        }
+        
+        // Logique de calcul du solde
+        const mouvements = await MvtCaisse.find({ caisse: caisseId, etat: "valide" });
+        const totalMouvements = mouvements.reduce((total, mvt) => {
+            const montant = mvt.montant || 0;
+            return mvt.typeMouvement === "encaissement" ? total + montant : total - montant;
+        }, 0);
+
+        const soldeCalcule = (caisse.soldeInitial || 0) + totalMouvements;
+
+        res.json({
+            soldeInitial: caisse.soldeInitial || 0,// Nécessaire pour le calcul dans le frontend
+            soldeCalcule: parseFloat(soldeCalcule.toFixed(2)), // Solde avant les mouvements en cours
+            totalMouvements: parseFloat(totalMouvements.toFixed(2)),
+        });
+    } catch (err) {
+        console.error("❌ Erreur calcul solde caisse :", err);
+        res.status(500).json({ message: "Erreur serveur", details: err.message });
+    }
+});
+// NOUVEAU CODE (Récupération directe du solde stocké)
 
 // GET /api/caisses/ (Voir toutes les caisses avec un filtre de recherche)
 router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
@@ -226,53 +331,6 @@ router.delete('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (r
 
 // GET /api/caisses/:id/solde (Calculer le solde de SA propre caisse)
 // GET /api/caisses/:id/solde
-router.get("/:id/solde", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
-    try {
-        const caisseId = req.params.id;
-
-        // Vérif ObjectId valide
-        if (!mongoose.Types.ObjectId.isValid(caisseId)) {
-            return res.status(400).json({ message: "ID de caisse invalide" });
-        }
-
-        const caisse = await Caisse.findById(caisseId);
-        if (!caisse) {
-            return res.status(404).json({ message: "Caisse non trouvée" });
-        }
-
-        const userRole = req.user.role;
-        const userSocietesIds = req.user.societes.map(s => s._id.toString());
-        const caisseSocieteId = caisse.societe ? caisse.societe.toString() : null;
-
-        // Vérif appartenance société
-        if (userRole !== 'super-admin' && caisseSocieteId && !userSocietesIds.includes(caisseSocieteId)) {
-            return res.status(403).json({ message: "Accès refusé. Cette caisse n'appartient pas à votre société." });
-        }
-
-      // Gardez la vérification du caissier attitré si vous souhaitez la maintenir
-        if (userRole === 'caissier' && caisse.utilisateur && caisse.utilisateur.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: "Accès refusé. Vous n'êtes pas le caissier de cette caisse." });
-        }
-        
-        // Le reste de la logique reste inchangée
-        const mouvements = await MvtCaisse.find({ caisse: caisseId, etat: "valide" });
-        const totalMouvements = mouvements.reduce((total, mvt) => {
-            const montant = mvt.montant || 0;
-            return mvt.typeMouvement === "encaissement" ? total + montant : total - montant;
-        }, 0);
-
-        const soldeCalcule = (caisse.soldeInitial || 0) + totalMouvements;
-
-        res.json({
-            soldeInitial: caisse.soldeInitial || 0,
-            soldeCalcule: parseFloat(soldeCalcule.toFixed(2)),
-            totalMouvements: parseFloat(totalMouvements.toFixed(2)),
-        });
-    } catch (err) {
-        console.error("❌ Erreur calcul solde caisse :", err);
-        res.status(500).json({ message: "Erreur serveur", details: err.message });
-    }
-});
 
 // PATCH /api/caisses/:id/activer (Activer/Désactiver une caisse)
 router.patch('/:id/activer', verifyToken, checkRole(['super-admin', 'admin', 'responsable']), async (req, res) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Briefcase } from 'lucide-react';
 import axios from 'axios';
 
-// Le composant CompanySwitcher prend maintenant un token en prop depuis la Navbar
+
 export default function CompanySwitcher({ token }) {
     const [companies, setCompanies] = useState([]);
     const [selectedCompany, setSelectedCompany] = useState(null);

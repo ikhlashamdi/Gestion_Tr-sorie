@@ -23,6 +23,7 @@ export default function CaisseMouvementFormTable() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isEditing, setIsEditing] = useState(true);
+  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
 
   // État pour stocker les mouvements déjà sauvegardés (lecture seule)
   const [savedMouvements, setSavedMouvements] = useState([]); 
@@ -46,6 +47,63 @@ export default function CaisseMouvementFormTable() {
   const [isCaisseModalOpen, setIsCaisseModalOpen] = useState(false);
   const [selectedModelForModal, setSelectedModelForModal] = useState("");
   
+  // Fonction pour récupérer les caisses par société
+  const fetchCaisses = async (companyId = null) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const currentCompanyId = companyId || localStorage.getItem("selectedCompanyId");
+      
+      const params = currentCompanyId ? { companyId: currentCompanyId } : {};
+      
+      const caissesRes = await axios.get("http://localhost:5000/api/caisses", {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+      });
+      
+      const caissesActives = caissesRes.data.filter(c => c.active);
+      setCaisses(caissesActives);
+    } catch (err) {
+      console.error("Erreur récupération des caisses :", err);
+      setError("❌ Erreur de chargement des caisses.");
+    }
+  };
+
+  // Récupérer la société sélectionnée
+  useEffect(() => {
+    const companyId = localStorage.getItem("selectedCompanyId");
+    setSelectedCompanyId(companyId);
+
+    const handleCompanyChange = () => {
+      const newCompanyId = localStorage.getItem("selectedCompanyId");
+      setSelectedCompanyId(newCompanyId);
+      // Recharger les caisses quand la société change
+      fetchCaisses(newCompanyId);
+      // Réinitialiser la sélection de caisse
+      setForm(prev => ({ ...prev, caisse: "" }));
+      setMouvements([
+        {
+          date: new Date().toISOString().split("T")[0],
+          description: "",
+          typeMouvement: "decaissement",
+          montant: "",
+          tierModel: "",
+          tier: "",
+          natureCharge: "",
+        }
+      ]);
+      setSavedMouvements([]);
+    };
+
+    window.addEventListener("companyChanged", handleCompanyChange);
+
+    return () => {
+      window.removeEventListener("companyChanged", handleCompanyChange);
+    };
+  }, []);
+
+  // Chargement des données initiales
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -58,14 +116,14 @@ export default function CaisseMouvementFormTable() {
         }
         const headers = { Authorization: `Bearer ${token}` };
         
-        const [caissesRes, naturesRes, userRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/caisses", { headers }),
+        // Récupérer les caisses selon la société
+        await fetchCaisses();
+        
+        const [naturesRes, userRes] = await Promise.all([
           axios.get("http://localhost:5000/api/nature-charges", { headers }),
           axios.get("http://localhost:5000/api/users/me", { headers }),
         ]);
 
-        const caissesActives = caissesRes.data.filter(c => c.active);
-        setCaisses(caissesActives);
         setNatures(naturesRes.data);
         setCurrentUser(userRes.data);
         
@@ -507,7 +565,7 @@ export default function CaisseMouvementFormTable() {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-sm text-gray-600">Solde initial</p>
-                <p className="font-semibold">{soldeInitialCaisse.toFixed(2)} DT</p>
+                <p className="font-semibold">{(soldeInitialCaisse.toFixed(2)|| 0)} DT</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total mouvements</p>
@@ -688,7 +746,7 @@ export default function CaisseMouvementFormTable() {
                         <option value="">-- Tiers --</option>
                         {(tiersByModel[mvt.tierModel] || []).map((t, idx) => (
                           <option key={idx} value={t._id}>
-                            {t.raisonSociale || t.libelle || t.nomComplet || t.matricule || t.numeroCompte || 'Nom non trouvé'}
+                            {t.rsoc || t.libelle || t.nomComplet || t.matricule || t.numeroCompte || 'Nom non trouvé'}
                           </option>
                         ))}
                         <option value="__new">➕ Nouveau...</option>

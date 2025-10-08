@@ -8,6 +8,7 @@ const Personnel = require('../Models/Personnel');
 const Banque = require('../Models/Banque'); 
 const Tiers = require('../Models/Tier'); 
 const Fournisseur = require('../Models/fournisseur'); 
+const mouvementController = require('../controllers/mouvementController');
 const mongoose = require('mongoose');
 
 // 🔍 GET mouvements avec filtres
@@ -243,5 +244,60 @@ router.get('/historique/:caisseId', async (req, res) => {
   }
 });
 
+router.get('/recent/:caisseId', async (req, res) => {
+  const { caisseId } = req.params;
+  const limit = parseInt(req.query.limit) || 5;
 
+  if (!mongoose.Types.ObjectId.isValid(caisseId)) {
+    return res.status(400).json({ message: "ID caisse invalide." });
+  }
+
+  try {
+    const caisse = await Caisse.findById(caisseId);
+    if (!caisse) {
+      return res.status(404).json({ message: "Caisse introuvable." });
+    }
+
+    const mouvements = await MvtCaisse.find({
+      caisse: caisseId,
+      etat: 'valide'
+    })
+      .sort({ date: -1, createdAt: -1 }) // Les plus récents en premier
+      .limit(limit)
+      .populate({ path: 'natureCharge', select: 'libelle code' })
+      .populate({ path: 'utilisateur', select: 'name' })
+      .lean();
+
+    // 🔹 Résolution manuelle du tier selon tierModel
+    const tierModels = { Client, Fournisseur, Vehicule, Personnel, Banque, Tiers };
+    for (let mvt of mouvements) {
+      if (mvt.tier && mvt.tierModel && tierModels[mvt.tierModel]) {
+        const Model = tierModels[mvt.tierModel];
+        mvt.tier = await Model.findById(mvt.tier).select('libelle code rsoc nomComplet raisonSociale').lean() || null;
+      }
+    }
+
+    // Formater la réponse
+    const mouvementsFormates = mouvements.map(mvt => ({
+      _id: mvt._id,
+      date: mvt.date,
+      typeMouvement: mvt.typeMouvement,
+      montant: mvt.montant,
+      description: mvt.description || '',
+      natureCharge: mvt.natureCharge,
+      tier: mvt.tier,
+      tierModel: mvt.tierModel,
+      utilisateur: mvt.utilisateur,
+      createdAt: mvt.createdAt
+    }));
+
+    res.json(mouvementsFormates);
+
+  } catch (err) {
+    console.error("Erreur récupération mouvements récents :", err);
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
+router.get('/daily-summary/:caisseId', mouvementController.getDailySummary);
 module.exports = router;

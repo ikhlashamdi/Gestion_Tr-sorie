@@ -249,9 +249,11 @@ export default function CaisseTable({
                 </div>
               </th>
               <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Statut</th>
-              {currentUser?.role === "admin" || currentUser?.role === "super-admin" && (
+          {
+            (currentUser?.role === "admin" || currentUser?.role === "super-admin") && (
               <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Actions</th>
-              )}
+            )
+          }
             </tr>
           </thead>
 

@@ -24,7 +24,10 @@ export default function CaisseMouvementFormTable() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isEditing, setIsEditing] = useState(true);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  const [isCaisseOuverte, setIsCaisseOuverte] = useState(false);
 
+  // État pour stocker les mouvements déjà sauvegardés (lecture seule)
+// ...
   // État pour stocker les mouvements déjà sauvegardés (lecture seule)
   const [savedMouvements, setSavedMouvements] = useState([]); 
 
@@ -47,28 +50,47 @@ export default function CaisseMouvementFormTable() {
   const [isCaisseModalOpen, setIsCaisseModalOpen] = useState(false);
   const [selectedModelForModal, setSelectedModelForModal] = useState("");
   
-  // Fonction pour récupérer les caisses par société
-  const fetchCaisses = async (companyId = null) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+ // ... lignes 90-104
 
-      const currentCompanyId = companyId || localStorage.getItem("selectedCompanyId");
-      
-      const params = currentCompanyId ? { companyId: currentCompanyId } : {};
-      
-      const caissesRes = await axios.get("http://localhost:5000/api/caisses", {
-        headers: { Authorization: `Bearer ${token}` },
-        params
-      });
-      
-      const caissesActives = caissesRes.data.filter(c => c.active);
-      setCaisses(caissesActives);
-    } catch (err) {
-      console.error("Erreur récupération des caisses :", err);
-      setError("❌ Erreur de chargement des caisses.");
-    }
-  };
+  // Fonction pour récupérer les caisses par société
+  const fetchCaisses = async (companyId = null) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const currentCompanyId = companyId || localStorage.getItem("selectedCompanyId");
+      
+      const params = currentCompanyId ? { companyId: currentCompanyId } : {};
+      
+      const caissesRes = await axios.get("http://localhost:5000/api/caisses", {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+      });
+      
+      // 🛑 MODIFICATION ICI
+      // Trouvez l'utilisateur pour appliquer la logique
+      const user = currentUser || (await axios.get("http://localhost:5000/api/users/me", { headers: { Authorization: `Bearer ${token}` } })).data;
+
+      let caissesDisponibles = caissesRes.data;
+
+      if (user.role === 'caissier' ) {
+        // Le caissier ne voit que sa caisse (utilisateur matchant) qui est active ET confirmée (ouverte)
+        caissesDisponibles = caissesDisponibles.filter(
+          c => c.active && 
+          c.etat === 'ouverte' && // <--- Condition pour caisse OUVERTE
+          c.utilisateur?._id === user._id
+        );
+      } else {
+        // Les autres rôles voient toutes les caisses actives pour la gestion
+        caissesDisponibles = caissesDisponibles.filter(c => c.active);
+      }
+      
+      setCaisses(caissesDisponibles);
+    } catch (err) {
+      console.error("Erreur récupération des caisses :", err);
+      setError("❌ Erreur de chargement des caisses.");
+    }
+  };
 
   // Récupérer la société sélectionnée
   useEffect(() => {
@@ -173,7 +195,11 @@ export default function CaisseMouvementFormTable() {
   const handleCaisseChange = async (e) => {
     const selectedId = e.target.value;
     setForm((prev) => ({ ...prev, caisse: selectedId }));
-    
+
+    const caisseDetails = caisses.find(c => c._id === selectedId);
+    const estOuverte = caisseDetails ? caisseDetails.etat === 'ouverte' : false;
+    setIsCaisseOuverte(estOuverte);
+
     setMouvements([
       {
         date: new Date().toISOString().split("T")[0],
@@ -243,6 +269,10 @@ export default function CaisseMouvementFormTable() {
   };
 
   const addLine = () => {
+     if (!isCaisseOuverte) { 
+      setError("❌ Impossible d'ajouter une ligne. La caisse doit être ouverte.");
+      return;
+    }
     setMouvements((prev) => [
       ...prev,
       {
@@ -492,9 +522,9 @@ export default function CaisseMouvementFormTable() {
             <button
               type="submit"
               form="mouvement-form"
-              disabled={isSubmitting || !form.caisse}
+              disabled={isSubmitting || !form.caisse || !isCaisseOuverte}
               className={`flex items-center gap-1 px-3 py-1.5 text-sm bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-lg transition-colors shadow-md ${
-                isSubmitting || !form.caisse
+                isSubmitting || !form.caisse || !isCaisseOuverte 
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:from-purple-700 hover:to-indigo-800'
               }`}
@@ -534,7 +564,11 @@ export default function CaisseMouvementFormTable() {
           ✅ Enregistré avec succès
         </div>
       )}
-
+  {isEditing && form.caisse && !isCaisseOuverte && (
+        <div className="mb-6 p-3 bg-red-100 border border-red-300 text-red-800 rounded-lg font-medium">
+          ⚠️ **Action Restreinte :** Cette caisse est actuellement **fermée** par le responsable. Vous ne pouvez pas saisir de nouveaux mouvements.
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Caisse *</label>
@@ -770,17 +804,22 @@ export default function CaisseMouvementFormTable() {
           </table>
         </div>
 
-        {isEditing && (
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={addLine}
-              className="flex items-center gap-1 px-4 py-2 text-sm text-white bg-green-500 rounded-md hover:bg-green-600 transition-colors"
-            >
-              <Plus size={16} /> Ajouter une ligne
-            </button>
-          </div>
-        )}
+      {isEditing && (
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={addLine}
+              disabled={!isCaisseOuverte}
+              // 🛑 CORRECTION ICI
+              className={`flex items-center gap-1 px-4 py-2 text-sm text-white bg-green-500 rounded-md hover:bg-green-600 transition-colors ${
+                !isCaisseOuverte ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600' 
+              }`} 
+            >
+              <Plus size={16} /> Ajouter une ligne
+            </button>
+          </div>
+        )}
+
       </form>
       {isNatureModalOpen && (
         <NatureChargeModal

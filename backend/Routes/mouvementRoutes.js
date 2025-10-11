@@ -11,6 +11,7 @@ const Fournisseur = require('../Models/fournisseur');
 const mouvementController = require('../controllers/mouvementController');
 const mongoose = require('mongoose');
 
+const checkRole = require("../Middlewares/roleMiddleware"); 
 // 🔍 GET mouvements avec filtres
 router.get('/', async (req, res) => {
   const { start, end, caisse, etat } = req.query;
@@ -300,4 +301,33 @@ router.get('/recent/:caisseId', async (req, res) => {
 });
 
 router.get('/daily-summary/:caisseId', mouvementController.getDailySummary);
+
+
+// PUT /api/mouvements/:id/valider
+router.put('/:id/valider', checkRole(['responsable']) , async (req, res) => {
+  try {
+    const mouvement = await MvtCaisse.findById(req.params.id);
+    if (!mouvement) return res.status(404).json({ message: "Mouvement non trouvé" });
+
+    if (mouvement.etat !== 'brouillon')
+      return res.status(400).json({ message: "Ce mouvement est déjà traité" });
+
+    mouvement.etat = 'valide';
+    await mouvement.save();
+
+    // Mettre à jour le solde de la caisse
+    const caisse = await Caisse.findById(mouvement.caisse);
+    if (mouvement.typeMouvement === 'encaissement') {
+      caisse.soldeActuel += mouvement.montant;
+    } else {
+      caisse.soldeActuel -= mouvement.montant;
+    }
+    await caisse.save();
+
+    res.json({ message: 'Mouvement validé et solde mis à jour', mouvement, caisse });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

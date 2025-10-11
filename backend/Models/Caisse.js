@@ -54,13 +54,22 @@ const caisseSchema = new mongoose.Schema({
 
 etat: {
   type: String,
-  enum: ['brouillon', 'confirme', 'annule'],
+  enum: ['brouillon', 'ouverte', 'fermée'],
   default: 'brouillon'
 },
   active: {
     type: Boolean,
     default: true
-  }});
+  },
+
+
+
+  responsable: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  dateOuverture: { type: Date },
+  dateFermeture: { type: Date }
+
+
+});
   
   
 

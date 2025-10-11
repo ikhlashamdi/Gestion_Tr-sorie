@@ -5,14 +5,10 @@ const User = require('../Models/User')
 const router = express.Router();
 const MvtCaisse = require("../Models/MvtCaisse");
 
-// Import des middlewares de sécurité
-const verifyToken = require("../Middlewares/Auth"); // Assurez-vous que ce chemin est correct
-const checkRole = require("../Middlewares/roleMiddleware"); // Assurez-vous que ce chemin est correct
 
-// Ancien code (qui calculait le solde à partir des mouvements)
-// router.get("/:id/solde", ..., async (req, res) => { /* ... calcul des mouvements */ });
+const verifyToken = require("../Middlewares/Auth"); 
+const checkRole = require("../Middlewares/roleMiddleware"); 
 
-// GET /api/caisses/by-user/:userId
 router.get("/by-user/:userId", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -325,14 +321,6 @@ router.delete('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (r
     }
 });
 
-// =================================================================
-// ROUTES POUR CAISSIER et RESPONSABLE
-// =================================================================
-
-// GET /api/caisses/:id/solde (Calculer le solde de SA propre caisse)
-// GET /api/caisses/:id/solde
-
-// PATCH /api/caisses/:id/activer (Activer/Désactiver une caisse)
 router.patch('/:id/activer', verifyToken, checkRole(['super-admin', 'admin', 'responsable']), async (req, res) => {
     try {
       const caisse = await Caisse.findById(req.params.id);
@@ -364,7 +352,7 @@ router.patch('/:id/activer', verifyToken, checkRole(['super-admin', 'admin', 're
 router.patch('/:id/etat', verifyToken, checkRole(['super-admin', 'admin', 'responsable']), async (req, res) => {
     const { etat } = req.body;
  
-    if (!["brouillon", "confirme", "annule"].includes(etat)) {
+    if (!["brouillon", "ouverte", "fermée"].includes(etat)) {
       return res.status(400).json({ message: "État non valide" });
     }
  
@@ -385,6 +373,37 @@ router.patch('/:id/etat', verifyToken, checkRole(['super-admin', 'admin', 'respo
     } catch (err) {
       res.status(500).json({ message: "Erreur serveur" });
     }
+});
+
+router.patch("/:id/ouvrir", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
+  try {
+    const caisse = await Caisse.findById(req.params.id);
+    if (!caisse) return res.status(404).json({ message: "Caisse non trouvée" });
+
+    caisse.etat = 'ouverte';
+    caisse.dateOuverture = new Date();
+    caisse.responsable = req.user._id;
+    await caisse.save();
+
+    res.json({ message: 'Caisse ouverte avec succès', caisse });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+// PUT /api/caisses/:id/fermer
+router.patch("/:id/fermer", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
+  try {
+    const caisse = await Caisse.findById(req.params.id);
+    if (!caisse) return res.status(404).json({ message: "Caisse non trouvée" });
+
+    caisse.etat = 'fermée';
+    caisse.dateFermeture = new Date();
+    await caisse.save();
+
+    res.json({ message: 'Caisse fermée avec succès', caisse });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 

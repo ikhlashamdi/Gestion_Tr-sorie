@@ -20,8 +20,6 @@ exports.getDailySummary = async (req, res) => {
             {
                 $match: {
                     caisse: caisseObjectId,
-                    // ⚠️ VÉRIFIEZ ABSOLUMENT QUE VOTRE STATUT EST BIEN EN MINUSCULES
-                    //etat: 'valide', // Assurez-vous que la valeur est 'valide' et non 'valide' (avec accent) ou 'valider'
                     date: { $gte: startDate }
                 }
             },

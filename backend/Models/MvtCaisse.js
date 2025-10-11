@@ -49,7 +49,7 @@ const mvtCaisseSchema = new mongoose.Schema({
 
   etat: {
     type: String,
-    enum: ["brouillon", "valide", "annule"],
+    enum: ["brouillon", "ouverte", "annule"],
     default: "brouillon",
     required: false
   },

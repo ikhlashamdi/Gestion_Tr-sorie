@@ -33,14 +33,14 @@ const Home = () => {
         adminCount: 0
     });
     
-    // États pour le caissier
+    // États pour le caissier/responsable
     const [caisses, setCaisses] = useState([]);
     const [activeCaisse, setActiveCaisse] = useState(null);
     const [caisseSolde, setCaisseSolde] = useState(0);
     const [recentMvts, setRecentMvts] = useState([]);
     const [loadingRecent, setLoadingRecent] = useState(false);
 
-    // 🆕 NOUVEL ÉTAT : Pour les statistiques journalières (graphique)
+    // NOUVEL ÉTAT : Pour les statistiques journalières (graphique)
     const [dailyStats, setDailyStats] = useState([]);
     const [loadingDailyStats, setLoadingDailyStats] = useState(false);
 
@@ -66,6 +66,7 @@ const Home = () => {
                 fetchUsers();
                 fetchStats();
             } else {
+                // Cette logique est pour le caissier/responsable
                 fetchCaissesForUser(userData._id);
             }
         }
@@ -76,11 +77,11 @@ const Home = () => {
         if (activeCaisse) {
             fetchCaisseSolde(activeCaisse._id);
             fetchRecentMvts(activeCaisse._id);
-            fetchDailyStats(activeCaisse._id); // 🆕
+            fetchDailyStats(activeCaisse._id);
         } else {
             setCaisseSolde(0);
             setRecentMvts([]); 
-            setDailyStats([]); // 🆕
+            setDailyStats([]); 
         }
     }, [activeCaisse]);
 
@@ -111,10 +112,12 @@ const Home = () => {
 
     const fetchCaissesForUser = async (userId) => {
         try {
+            // Note : L'API doit renvoyer toutes les caisses où l'utilisateur est le 'responsable' ou 'utilisateur'
             const { data } = await api.get(`/caisses/by-user/${userId}`);
             setCaisses(data);
             
             if (data.length > 0) {
+                // Choisir la première caisse trouvée comme caisse active par défaut
                 setActiveCaisse(data[0]);
             } else {
                 setLoading(false); 
@@ -129,7 +132,6 @@ const Home = () => {
         try {
             const { data } = await api.get(`/caisses/${caisseId}/solde`);
             setCaisseSolde(data.soldeCalcule || 0);
-            // Remarque : On ne met plus setLoading(false) ici.
         } catch (error) {
             handleError("Erreur lors du chargement du solde.");
             setCaisseSolde(0);
@@ -148,11 +150,11 @@ const Home = () => {
         }
     };
 
-    // 🆕 FONCTION POUR RÉCUPÉRER LES STATS JOURNALIÈRES POUR LE GRAPHIQUE
+    // FONCTION POUR RÉCUPÉRER LES STATS JOURNALIÈRES POUR LE GRAPHIQUE
     const fetchDailyStats = async (caisseId) => {
         setLoadingDailyStats(true);
         try {
-            // Requête pour les 7 derniers jours par exemple
+            // Requête pour les 30 derniers jours
             const { data } = await api.get(`/mouvements/daily-summary/${caisseId}?days=30`);
             setDailyStats(data);
         } catch (error) {
@@ -204,6 +206,9 @@ const Home = () => {
         );
     }
 
+    // Déterminer si l'utilisateur est un administrateur pour simplifier la vue
+    const isAdminView = ['super-admin', 'admin'].includes(userData?.role);
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -212,31 +217,43 @@ const Home = () => {
                         Bienvenue, {userData?.name || 'Cher Utilisateur'} 👋
                     </h1>
                     <p className="text-gray-600 mt-2">
-                        {['super-admin', 'admin'].includes(userData?.role)
+                        {isAdminView
                             ? "Vous avez accès au tableau de bord administrateur"
-                            : "Gérez vos caisses quotidiennes"}
+                            : "Tableau de bord de responsable de caisse. Gérez vos opérations quotidiennes."}
                     </p>
                 </div>
 
-                {/* Bouton Actualiser (Admin) */}
-                {['super-admin', 'admin'].includes(userData?.role) && (
-                    <button
-                        onClick={() => { fetchUsers(); fetchStats(); }}
-                        disabled={refreshing}
-                        className={`mt-4 md:mt-0 flex items-center px-4 py-2 rounded-lg ${
-                            refreshing
-                                ? 'bg-gray-200 text-gray-500'
-                                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                        }`}
-                    >
-                        <RefreshCw size={18} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                        {refreshing ? 'Actualisation...' : 'Actualiser'}
-                    </button>
-                )}
+                {/* Bouton Actualiser */}
+                <button
+                    onClick={() => { 
+                        setRefreshing(true);
+                        if (isAdminView) {
+                            fetchUsers(); 
+                            fetchStats();
+                        } else if (activeCaisse) {
+                            fetchCaisseSolde(activeCaisse._id);
+                            fetchRecentMvts(activeCaisse._id);
+                            fetchDailyStats(activeCaisse._id);
+                        }
+                        // Timeout court pour simuler le rafraîchissement visuel
+                        setTimeout(() => setRefreshing(false), 500);
+                    }}
+                    disabled={refreshing}
+                    className={`mt-4 md:mt-0 flex items-center px-4 py-2 rounded-lg ${
+                        refreshing
+                            ? 'bg-gray-200 text-gray-500'
+                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors'
+                    }`}
+                >
+                    <RefreshCw size={18} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    {refreshing ? 'Actualisation...' : 'Actualiser les données'}
+                </button>
             </div>
 
-            {/* VUE ADMIN */}
-            {['super-admin', 'admin'].includes(userData?.role) ? (
+            {/* ######################################### */}
+            {/* VUE ADMIN/SUPER-ADMIN */}
+            {/* ######################################### */}
+            {isAdminView ? (
                 <>
                     {/* Cartes de statistiques (Admin) */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -358,58 +375,64 @@ const Home = () => {
                     </div>
                 </>
             ) : (
-                /* VUE CAISSIER */
+                /* ######################################### */
+                /* VUE CAISSIER / RESPONSABLE */
+                /* ######################################### */
                 <div className="space-y-6">
-                    {/* 1. SÉLECTEUR DE CAISSE ET SOLDE ACTUEL */}
-                    <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-4 w-full sm:w-1/2">
-                            <Landmark size={32} className="text-purple-600 flex-shrink-0" />
-                            <div className="w-full">
-                                <label htmlFor="caisse-select" className="block text-xs font-medium text-gray-500 uppercase">
-                                    Caisse Active
-                                </label>
-                                <select
-                                    id="caisse-select"
-                                    onChange={handleCaisseChange}
-                                    value={activeCaisse?._id || ''}
-                                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md font-semibold"
-                                >
-                                    {caisses.length > 0 ? (
-                                        caisses.map(caisse => (
-                                            <option key={caisse._id} value={caisse._id}>
-                                                {caisse.libelle || caisse.name}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option value="">Aucune caisse assignée</option>
-                                    )}
-                                </select>
+                    <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Mes Caisses et Solde</h2>
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                            {/* 1. SÉLECTEUR DE CAISSE */}
+                            <div className="flex items-center gap-4 w-full sm:w-1/2">
+                                <Landmark size={32} className="text-purple-600 flex-shrink-0" />
+                                <div className="w-full">
+                                    <label htmlFor="caisse-select" className="block text-xs font-medium text-gray-500 uppercase">
+                                        Caisse Active
+                                    </label>
+                                    <select
+                                        id="caisse-select"
+                                        onChange={handleCaisseChange}
+                                        value={activeCaisse?._id || ''}
+                                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md font-semibold"
+                                    >
+                                        {caisses.length > 0 ? (
+                                            caisses.map(caisse => (
+                                                <option key={caisse._id} value={caisse._id}>
+                                                    {caisse.libelle || caisse.name}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option value="">Aucune caisse assignée</option>
+                                        )}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="w-full sm:w-1/2 bg-purple-50 p-4 rounded-lg border border-purple-200">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-md font-semibold text-gray-700">Solde Actuel</h3>
-                                <Banknote size={24} className="text-purple-700" />
+                            {/* SOLDE ACTUEL */}
+                            <div className="w-full sm:w-1/2 bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-md font-semibold text-gray-700">Solde Actuel</h3>
+                                    <Banknote size={24} className="text-purple-700" />
+                                </div>
+                                <p className="text-3xl font-bold text-purple-900 mt-1">
+                                    {activeCaisse ? `${caisseSolde.toFixed(2)}` : '0.00'} DT
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {activeCaisse ? `Dernière mise à jour : ${new Date().toLocaleTimeString()}` : 'Sélectionnez une caisse'}
+                                </p>
                             </div>
-                            <p className="text-3xl font-bold text-purple-900 mt-1">
-                                {activeCaisse ? `${caisseSolde.toFixed(2)}` : '0.00'} DT
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                {activeCaisse ? `Dernière mise à jour à ${new Date().toLocaleTimeString()}` : 'Sélectionnez une caisse'}
-                            </p>
                         </div>
                     </div>
 
-                    {/* 🆕 2. GRAPHIQUE DE LA TENDANCE JOURNALIÈRE */}
+                    {/* GRAPHIQUE DE LA TENDANCE JOURNALIÈRE */}
                     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                            <BarChart2 className="mr-2" size={20} />
-                            Tendance des Mouvements (30 Jours)
+                            <BarChart2 className="mr-2 text-purple-600" size={20} />
+                            Tendance des Mouvements (30 Derniers Jours)
                         </h2>
                         
                         {!activeCaisse && (
-                            <p className="mt-2 text-center text-gray-500">Sélectionnez une caisse pour voir son historique.</p>
+                            <p className="mt-2 text-center text-gray-500 py-8">Sélectionnez une caisse pour voir son historique.</p>
                         )}
 
                         {activeCaisse && loadingDailyStats ? (
@@ -423,22 +446,21 @@ const Home = () => {
                                     margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
                                 >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                                    {/* Affiche le jour/mois en bas */}
-
-<XAxis 
-    dataKey="date" 
-    stroke="#6b7280" 
-    // 💡 Ajout de l'index pour espacer les étiquettes
-    tickFormatter={(date, index) => {
-        if (index % 5 !== 0) return ''; // N'affiche qu'une étiquette sur cinq
-        const parts = date.split('-');
-        return `${parts[2]}/${parts[1]}`; 
-    }} 
-/>                                   {/* Affiche les montants en Kilos pour compacter */}
+                                    <XAxis 
+                                        dataKey="date" 
+                                        stroke="#6b7280" 
+                                        // Affiche la date une fois sur cinq pour éviter la surcharge
+                                        tickFormatter={(date, index) => {
+                                            if (index % 5 !== 0) return ''; 
+                                            const parts = date.split('-');
+                                            return `${parts[2]}/${parts[1]}`; 
+                                        }} 
+                                    />
+                                    {/* Affiche les montants en Kilos pour compacter */}
                                     <YAxis stroke="#6b7280" tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`} /> 
                                     <Tooltip 
                                         formatter={(value, name) => [`${value.toFixed(2)} DT`, name === 'encaissements' ? 'Encaissements' : 'Décaissements']} 
-                                        labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                                        labelFormatter={(date) => new Date(date).toLocaleDateString("fr-FR")}
                                     />
                                     <Legend formatter={(value) => value === 'encaissements' ? 'Encaissements' : 'Décaissements'} />
                                     <Bar dataKey="encaissements" fill="#10b981" name="Encaissements" /> {/* Vert */}
@@ -452,11 +474,11 @@ const Home = () => {
                         )}
                     </div>
                     
-                    {/* 3. ACTIONS RAPIDES */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* ACTIONS RAPIDES */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <ActionButton 
                             icon={PlusCircle} 
-                            label="Nouveau Encaissement" 
+                            label="Nouvel Encaissement" 
                             color="green"
                             link={`/mvt-caisse/new?type=entree&caisseId=${activeCaisse?._id}`}
                             disabled={!activeCaisse}
@@ -477,19 +499,19 @@ const Home = () => {
                         />
                         <ActionButton 
                             icon={Clock} 
-                            label="Historique Mouvements" 
+                            label="Journal de Caisse" 
                             color="orange"
                             link={`/journal-caisse?caisseId=${activeCaisse?._id}`}
                             disabled={!activeCaisse}
                         />
                     </div>
 
-                    {/* 4. VUE D'ENSEMBLE (Mouvements Récents) */}
+                    {/* VUE D'ENSEMBLE (Mouvements Récents) */}
                     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Mouvements Récents (Caisse Active)</h2>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Mouvements Récents (Validés)</h2>
                         
                         {!activeCaisse && (
-                            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
                                 <p className="text-yellow-800 text-sm">
                                     Veuillez sélectionner une caisse pour voir les mouvements récents.
                                 </p>
@@ -526,7 +548,7 @@ const Home = () => {
                                                 </p>
                                                 <p className="text-xs text-gray-500">
                                                     {/* Affichage amélioré de l'heure */}
-                                                    {new Date(mvt.date).toLocaleDateString()} à {new Date(mvt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {new Date(mvt.date).toLocaleDateString("fr-FR")} à {new Date(mvt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     {mvt.tier && mvt.tierModel && ` | Tier (${mvt.tierModel}): ${getTierName(mvt.tier)}`}
                                                     {mvt.natureCharge && ` | Nature: ${mvt.natureCharge.libelle}`}
                                                 </p>
@@ -578,7 +600,10 @@ const ActionButton = ({ icon: Icon, label, color, link, disabled }) => {
     );
 
     return disabled ? (
-        Content
+        <div className={`${baseClasses} ${colorClasses} pointer-events-none`}>
+            <Icon size={32} className="mb-2" />
+            <span className="font-semibold text-sm">{label}</span>
+        </div>
     ) : (
         <a href={link} className={`${baseClasses} ${colorClasses}`}>
             <Icon size={32} className="mb-2" />

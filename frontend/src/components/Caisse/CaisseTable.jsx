@@ -69,6 +69,41 @@ export default function CaisseTable({
     }
   };
 
+  const handleOpenCaisse = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`http://localhost:5000/api/caisses/${id}/ouvrir`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) throw new Error("Échec de l'ouverture de la caisse");
+    onSearch(""); // rafraîchir la liste
+    alert("✅ Caisse ouverte avec succès !");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
+
+const handleCloseCaisse = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`http://localhost:5000/api/caisses/${id}/fermer`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) throw new Error("Échec de la fermeture de la caisse");
+    onSearch("");
+    alert("🔒 Caisse fermée avec succès !");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
+
+
   const handleSort = (key) => {
     let direction = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -249,8 +284,12 @@ export default function CaisseTable({
                 </div>
               </th>
               <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Statut</th>
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">
+  État
+</th>
+
           {
-            (currentUser?.role === "admin" || currentUser?.role === "super-admin") && (
+            (currentUser?.role === "admin" || currentUser?.role === "super-admin" || currentUser?.role === "responsable") && (
               <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Actions</th>
             )
           }
@@ -286,6 +325,20 @@ export default function CaisseTable({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
+  <span
+    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+      caisse.etat === "ouverte"
+        ? "bg-green-100 text-green-800"
+        : caisse.etat === "fermée"
+        ? "bg-red-100 text-red-800"
+        : "bg-gray-100 text-gray-700"
+    }`}
+  >
+    {caisse.etat.charAt(0).toUpperCase() + caisse.etat.slice(1)}
+  </span>
+</td>
+
+                  <td className="px-4 py-3 text-center">
                     <div className="flex justify-center space-x-2">
                       {currentUser?.role === "super-admin" && (
                         <>
@@ -302,6 +355,27 @@ export default function CaisseTable({
                           <Power size={16} />
                         </button>
                       )}
+
+                          {/* ✅ Nouveau rôle : Responsable de caisse */}
+    {currentUser?.role === "responsable" && (
+      <>
+        <button
+          onClick={() => handleOpenCaisse(caisse._id)}
+          className="p-2 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+          title="Ouvrir la caisse"
+        >
+          🟢
+        </button>
+
+        <button
+          onClick={() => handleCloseCaisse(caisse._id)}
+          className="p-2 rounded-full bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors"
+          title="Fermer la caisse"
+        >
+          🟠
+        </button>
+      </>
+    )}
                     </div>
                   </td>
                 </tr>

@@ -47,7 +47,7 @@ const handleLogin = async (e) => {
       if (user.role === "admin") {
         navigate('/home');
       } else if (user.role === "responsable") {
-        navigate('/responsable-dashboard');
+        navigate('/home');
       } else {
         navigate('/home');
       }

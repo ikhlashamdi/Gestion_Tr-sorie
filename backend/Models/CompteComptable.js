@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Définition du schéma pour un compte comptable
 const compteComptableSchema = new mongoose.Schema({
     num_cpte: {
         type: String,
@@ -16,7 +15,6 @@ const compteComptableSchema = new mongoose.Schema({
     }
 });
 
-// Création du modèle pour le compte comptable
 const CompteComptable = mongoose.model('CompteComptable', compteComptableSchema);
 
 module.exports = CompteComptable;

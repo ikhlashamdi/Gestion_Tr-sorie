@@ -1,6 +1,5 @@
 const Joi = require('joi');
 
-// Validation pour l'enregistrement
 const registerValidation = (data) => {
     const schema = Joi.object({
         name: Joi.string().min(3).required(),
@@ -12,7 +11,6 @@ const registerValidation = (data) => {
     return schema.validate(data);
 };
 
-// Validation pour la connexion
 const loginValidation = (data) => {
     const schema = Joi.object({
         email: Joi.string().email().required(),

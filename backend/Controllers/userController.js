@@ -35,7 +35,6 @@ exports.uploadImage = async (req, res) => {
 
 exports.getCurrentUser = async (req, res) => {
   try {
-    // ✅ Correction: Ajout de .populate('societes') pour récupérer les données complètes
     const user = await User.findById(req.user.id).select("-password").populate('societes');
     if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
     res.json(user);

@@ -36,8 +36,8 @@ const fournisseurSchema = new mongoose.Schema({
   prod: { type: String, default: '0' },                        // varchar(1)
   numch: { type: String },                                     // varchar(20)
   codebanq: { type: String },                                  // varchar(20)
-  libbanq: { type: String },                                   // varchar(50)
-  montant: { type: Number, default: 0 },                       // double
+  libbanq: { type: String },                                   
+  montant: { type: Number, default: 0 },                       
 });
 
 module.exports = mongoose.model('Fournisseur', fournisseurSchema);

@@ -13,45 +13,39 @@ router.get("/by-user/:userId", verifyToken, checkRole(['super-admin', 'admin', '
     try {
         const userId = req.params.userId;
 
-        // 1. Vérification des permissions
         const userRole = req.user.role;
-        // Récupère les IDs des sociétés de l'utilisateur connecté
         const userSocietesIds = req.user.societes ? req.user.societes.map(s => s._id.toString()) : [];
         
-        // CHECK CAISSIER: Un caissier ne peut voir que SES PROPRES caisses via cette route
+
         if (userRole === 'caissier' && req.user._id.toString() !== userId.toString()) {
              return res.status(403).json({ message: "Accès refusé. En tant que caissier, vous ne pouvez consulter que vos propres caisses via cet endpoint." });
         }
 
-        // Initialisation de la requête MongoDB
         let query = { utilisateur: userId };
         
-        // CHECK RESPONSABLE: Un responsable peut uniquement voir les caisses d'utilisateurs appartenant à ses sociétés.
         if (userRole === 'responsable') {
             if (userSocietesIds.length === 0) {
                 return res.status(403).json({ message: "Accès refusé. Vous n'êtes responsable d'aucune société." });
             }
-            // Ajoute un filtre pour que la caisse appartienne à l'une des sociétés du responsable
             query.societe = { $in: userSocietesIds };
         } 
         
-        // 2. Vérification de l'existence de l'utilisateur (bonne pratique)
         const targetUser = await User.findById(userId);
         if (!targetUser) {
             return res.status(404).json({ message: "Utilisateur cible non trouvé." });
         }
 
-        // 3. Récupération des caisses
+       
         const caisses = await Caisse.find(query)
-            .populate("utilisateur", "name role") // Peupler l'utilisateur assigné
-            .populate("societe", "name")         // Peupler la société
-            .select("-__v");                     // Exclure le champ de version
+            .populate("utilisateur", "name role") 
+            .populate("societe", "name")         
+            .select("-__v");                     
 
         res.status(200).send(caisses);
 
     } catch (err) {
         console.error("❌ Erreur API /by-user:", err);
-        // Gestion de l'erreur si l'ID n'est pas un ObjectId valide
+
         if (err instanceof mongoose.Error.CastError) {
             return res.status(400).send({ error: "ID utilisateur ou de caisse invalide." });
         }
@@ -59,14 +53,11 @@ router.get("/by-user/:userId", verifyToken, checkRole(['super-admin', 'admin', '
     }
 });
 
-// CONSERVER CETTE VERSION
 
-// GET /api/caisses/:id/solde (Calculer le solde de SA propre caisse)
 router.get("/:id/solde", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
     try {
         const caisseId = req.params.id;
 
-        // Vérif ObjectId valide
         if (!mongoose.Types.ObjectId.isValid(caisseId)) {
             return res.status(400).json({ message: "ID de caisse invalide" });
         }
@@ -80,18 +71,18 @@ router.get("/:id/solde", verifyToken, checkRole(['super-admin', 'admin', 'respon
         const userSocietesIds = req.user.societes.map(s => s._id.toString());
         const caisseSocieteId = caisse.societe ? caisse.societe.toString() : null;
 
-        // Vérif appartenance société
+      
         if (userRole !== 'super-admin' && caisseSocieteId && !userSocietesIds.includes(caisseSocieteId)) {
             return res.status(403).json({ message: "Accès refusé. Cette caisse n'appartient pas à votre société." });
         }
 
-      // Gardez la vérification du caissier attitré si vous souhaitez la maintenir
+      
         if (userRole === 'caissier' && caisse.utilisateur && caisse.utilisateur.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Accès refusé. Vous n'êtes pas le caissier de cette caisse." });
         }
         
-        // Logique de calcul du solde
-        const mouvements = await MvtCaisse.find({ caisse: caisseId, etat: "valide" });
+        
+        const mouvements = await MvtCaisse.find({ caisse: caisseId, etat: "ouverte" });
         const totalMouvements = mouvements.reduce((total, mvt) => {
             const montant = mvt.montant || 0;
             return mvt.typeMouvement === "encaissement" ? total + montant : total - montant;
@@ -100,7 +91,7 @@ router.get("/:id/solde", verifyToken, checkRole(['super-admin', 'admin', 'respon
         const soldeCalcule = (caisse.soldeInitial || 0) + totalMouvements;
 
         res.json({
-            soldeInitial: caisse.soldeInitial || 0,// Nécessaire pour le calcul dans le frontend
+            soldeInitial: caisse.soldeInitial || 0,
             soldeCalcule: parseFloat(soldeCalcule.toFixed(2)), // Solde avant les mouvements en cours
             totalMouvements: parseFloat(totalMouvements.toFixed(2)),
         });
@@ -109,12 +100,10 @@ router.get("/:id/solde", verifyToken, checkRole(['super-admin', 'admin', 'respon
         res.status(500).json({ message: "Erreur serveur", details: err.message });
     }
 });
-// NOUVEAU CODE (Récupération directe du solde stocké)
 
-// GET /api/caisses/ (Voir toutes les caisses avec un filtre de recherche)
 router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
     try {
-        const { search = '', companyId } = req.query; // 🔹 récupère l'ID société choisi
+        const { search = '', companyId } = req.query; 
         let query = {};
         const userRole = req.user.role;
         const userSocietesIds = req.user.societes ? req.user.societes.map(s => s._id.toString()) : [];
@@ -131,7 +120,7 @@ router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', '
             ];
         }
 
-        // 🔹 Filtrage par rôle
+
         if (userRole === 'caissier') {
             query.utilisateur = req.user._id;
         } 
@@ -142,14 +131,13 @@ router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', '
                 return res.status(200).send([]);
             }
         }
-        // 🔹 MODIFICATION: Les admins et super-admins peuvent voir toutes les sociétés.
-        // Le filtre 'companyId' n'est appliqué que si l'utilisateur n'est pas admin ou super-admin
+     
         if (userRole === 'admin' || userRole === 'super-admin') {
             if (companyId && companyId !== "all") {
                 query.societe = companyId;
             }
         } else {
-            // Le filtre s'applique normalement aux autres rôles
+          
             if (companyId && companyId !== "all") {
                 query.societe = companyId;
             } else if (userSocietesIds.length > 0) {
@@ -171,22 +159,21 @@ router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', '
     }
 });
 
-// POST /api/caisses/ (Créer une nouvelle caisse)
+
 router.post('/', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const { libelle, soldeInitial, seuilMax = 0, utilisateur, societe } = req.body;
 
-        // 1️⃣ Déterminer la société en se basant sur le choix du frontend
+        
         let societeId;
         if (req.user.role === 'super-admin') {
             societeId = societe;
-        } else { // Rôle 'admin'
-            // L'administrateur peut créer dans n'importe laquelle de ses sociétés,
-            // donc on utilise l'ID envoyé par le frontend.
+        } else { 
+            
             societeId = societe;
         }
 
-        // 2️⃣ Validation des champs requis
+       
         if (!libelle || soldeInitial == null || !utilisateur || !societeId) {
             return res.status(400).send({ error: "Champs requis manquants." });
         }
@@ -200,16 +187,15 @@ router.post('/', verifyToken, checkRole(['super-admin']), async (req, res) => {
         }
 
 
-        // 4️⃣ Vérification que l'utilisateur assigné appartient bien à la société
+        //Vérification que l'utilisateur assigné appartient bien à la société
         const user = await User.findById(utilisateur);
         if (!user || !user.societes.map(s => s.toString()).includes(societeId.toString())) {
             return res.status(400).send({ error: "L'utilisateur assigné n'appartient pas à la société sélectionnée." });
         }
 
-        // 5️⃣ Génération du code unique pour la caisse
-       // Génération du code unique pour la caisse
+       
 const lastCaisse = await Caisse.findOne({ societe: societeId })
-    .sort({ code: -1 }) // trie décroissant sur le code
+    .sort({ code: -1 }) 
     .exec();
 
 let nextNumber = 1;
@@ -222,7 +208,6 @@ if (lastCaisse && lastCaisse.code) {
 
 const code = `CA${String(nextNumber).padStart(2, "0")}`;
 
-        // 6️⃣ Création de la caisse
         const newCaisse = new Caisse({
             code,
             libelle,
@@ -243,7 +228,6 @@ const code = `CA${String(nextNumber).padStart(2, "0")}`;
     }
 });
 
-// GET /api/caisses/:id (Obtenir une caisse par ID)
 router.get('/:id', verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
     try {
         const caisse = await Caisse.findById(req.params.id)
@@ -257,13 +241,13 @@ router.get('/:id', verifyToken, checkRole(['super-admin', 'admin', 'responsable'
         const userSocietes = req.user.societes.map(s => s.toString());
         const caisseSocieteId = caisse.societe?._id?.toString();
 
-        // 🚨 MODIFICATION : Les admins et super-admins peuvent voir toutes les caisses sans restriction de société
+        
         if (userRole !== 'super-admin' && userRole !== 'admin' && caisseSocieteId && !userSocietes.includes(caisseSocieteId)) {
             console.log("❌ Accès refusé : Caisse d'une autre société.");
             return res.status(403).send({ error: 'Accès refusé. Cette caisse n\'appartient pas à votre société.' });
         }
 
-        // Vérif caissier
+      
         if (userRole === 'caissier' && caisse.utilisateur && caisse.utilisateur._id.toString() !== req.user._id.toString()) {
             console.log("❌ Accès refusé : L'utilisateur n'est pas le caissier de cette caisse.");
             return res.status(403).send({ error: 'Accès refusé. Vous n\'êtes pas le caissier de cette caisse.' });
@@ -277,18 +261,17 @@ router.get('/:id', verifyToken, checkRole(['super-admin', 'admin', 'responsable'
 });
 
 
-// PUT /api/caisses/:id (Mettre à jour une caisse)
 router.put('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const caisse = await Caisse.findById(req.params.id);
         if (!caisse) return res.status(404).send({ error: 'Caisse non trouvée' });
 
-        // 🚨 MODIFICATION : Les admins peuvent mettre à jour n'importe quelle caisse
+       
         if (req.user.role === 'admin' && req.user.societes.length > 0 && !req.user.societes.map(s => s._id.toString()).includes(caisse.societe.toString())) {
             return res.status(403).send({ error: 'Accès refusé. Cette caisse n\'appartient pas à votre société.' });
         }
         
-        // ⭐ NOUVELLE VALIDATION : VÉRIFIEZ QUE LE NOUVEL UTILISATEUR APPARTIENT BIEN À LA SOCIÉTÉ DE LA CAISSE
+        // VÉRIFIEZ QUE LE NOUVEL UTILISATEUR APPARTIENT BIEN À LA SOCIÉTÉ DE LA CAISSE
         const { utilisateur } = req.body;
         if (utilisateur) {
             const user = await User.findById(utilisateur);
@@ -303,13 +286,14 @@ router.put('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => 
         res.status(400).send({ error: 'Erreur lors de la mise à jour', details: err });
     }
 });
-// DELETE /api/caisses/:id (Supprimer une caisse)
+
+
 router.delete('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
     try {
         const caisse = await Caisse.findById(req.params.id);
         if (!caisse) return res.status(404).send({ error: 'Caisse non trouvée' });
         
-        // 🚨 MODIFICATION : Les admins peuvent supprimer n'importe quelle caisse
+       
         if (req.user.role === 'admin' && req.user.societes.length > 0 && !req.user.societes.map(s => s._id.toString()).includes(caisse.societe.toString())) {
             return res.status(403).send({ error: 'Accès refusé. Cette caisse n\'appartient pas à votre société.' });
         }
@@ -348,7 +332,7 @@ router.patch('/:id/activer', verifyToken, checkRole(['super-admin', 'admin', 're
 });
 
 
-// PATCH /api/caisses/:id/etat (Changer l'état d'une caisse)
+// Changer l'état d'une caisse
 router.patch('/:id/etat', verifyToken, checkRole(['super-admin', 'admin', 'responsable']), async (req, res) => {
     const { etat } = req.body;
  
@@ -390,7 +374,7 @@ router.patch("/:id/ouvrir", verifyToken, checkRole(['super-admin', 'admin', 'res
     res.status(500).json({ message: err.message });
   }
 });
-// PUT /api/caisses/:id/fermer
+
 router.patch("/:id/fermer", verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
   try {
     const caisse = await Caisse.findById(req.params.id);

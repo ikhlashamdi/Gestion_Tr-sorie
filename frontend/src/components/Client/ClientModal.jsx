@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
 
-// Génère automatiquement le prochain code CLxx
 const generateNextClientCode = (clients) => {
   if (!clients || clients.length === 0) return "CL-01";
 
   const codes = clients
     .map((c) => c.code)
-    .filter((code) => /^CL-\d+$/.test(code)); // Ne garder que les codes valides
+    .filter((code) => /^CL-\d+$/.test(code)); 
 
   if (codes.length === 0) return "CL-01";
 

@@ -8,11 +8,11 @@ const Personnel = require('../Models/Personnel');
 const Banque = require('../Models/Banque'); 
 const Tiers = require('../Models/Tier'); 
 const Fournisseur = require('../Models/fournisseur'); 
-const mouvementController = require('../controllers/mouvementController');
+const mouvementController = require('../Controllers/mouvementController');
 const mongoose = require('mongoose');
 
 const checkRole = require("../Middlewares/roleMiddleware"); 
-// 🔍 GET mouvements avec filtres
+
 router.get('/', async (req, res) => {
   const { start, end, caisse, etat } = req.query;
 
@@ -33,7 +33,6 @@ router.get('/', async (req, res) => {
     };
 
     if (caisse) {
-      // Valider que c'est un ObjectId Mongo valide
       if (!mongoose.Types.ObjectId.isValid(caisse)) {
         return res.status(400).json({ message: 'ID de caisse invalide' });
       }
@@ -65,7 +64,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 🧾 POST mouvements (batch)
+
 router.post("/batch", async (req, res) => {
   try {
     const { mouvements, utilisateur, caisse } = req.body;
@@ -74,7 +73,6 @@ router.post("/batch", async (req, res) => {
       return res.status(400).json({ message: "Champs manquants ou invalides" });
     }
 
-    // ⚠️ Vérifier que la caisse est active
     const caisseDoc = await Caisse.findById(caisse);
     if (!caisseDoc) {
       return res.status(404).json({ message: "Caisse non trouvée" });
@@ -91,17 +89,17 @@ router.post("/batch", async (req, res) => {
   montant: mvt.montant,
   natureCharge: mvt.natureCharge || null,
   tier: mvt.tier || null,
-  tierModel: mvt.tierModel || null,  // <-- ajouter ici aussi
+  tierModel: mvt.tierModel || null,  
   caisse,
   utilisateur,
-  etat: "valide"
+  etat: "ouverte"
 }));
 
 
     await MvtCaisse.insertMany(docsToInsert);
 
     // Recalculer le solde actuel à partir des mouvements valides
-    const mouvementsValides = await MvtCaisse.find({ caisse, etat: "valide" });
+    const mouvementsValides = await MvtCaisse.find({ caisse, etat: "ouverte" });
 
     const soldeActuel = mouvementsValides.reduce((acc, mvt) => {
       return mvt.typeMouvement === "decaissement"
@@ -120,13 +118,11 @@ router.post("/batch", async (req, res) => {
   }
 });
 
-// 🧾 POST mouvement unique (brouillon)
 router.post('/', async (req, res) => {
   try {
     const userId = req.body.utilisateur;
     const caisseId = req.body.caisse;
 
-    // ⚠️ Vérifier que la caisse est active
     const caisseDoc = await Caisse.findById(caisseId);
     if (!caisseDoc) {
       return res.status(404).json({ message: "Caisse non trouvée" });
@@ -149,15 +145,14 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 🛠️ PATCH mise à jour état d’un mouvement
 router.patch('/:id/etat', async (req, res) => {
   const { id } = req.params;
   const { etat } = req.body;
 
-  if (!["valide", "annule"].includes(etat)) {
+  if (!["ouverte", "fermée"].includes(etat)) {
     return res.status(400).json({ message: "État invalide" });
   }
-if (mouvement.etat === "annule" && etat === "valide") {
+if (mouvement.etat === "fermée" && etat === "ouverte") {
   return res.status(400).json({ message: "Impossible de valider un mouvement annulé." });
 }
 
@@ -192,14 +187,14 @@ router.get('/historique/:caisseId', async (req, res) => {
 
     const mouvements = await MvtCaisse.find({
       caisse: caisseId,
-      etat: 'valide'
+      etat: 'ouverte'
     })
       .sort({ date: 1 })
       .populate({ path: 'natureCharge', select: 'libelle code' })
       .populate({ path: 'utilisateur', select: 'name' })
       .lean();
 
-    // 🔹 Résolution manuelle du tier selon tierModel
+    //  Résolution manuelle du tier selon tierModel
     const tierModels = { Client, Fournisseur, Vehicule, Personnel, Banque, Tiers };
     for (let mvt of mouvements) {
       if (mvt.tier && mvt.tierModel && tierModels[mvt.tierModel]) {
@@ -223,7 +218,7 @@ router.get('/historique/:caisseId', async (req, res) => {
         montant: mvt.montant,
         natureCharge: mvt.natureCharge?._id || null,
         tier: mvt.tier?._id || null,
-        tierLibelle: mvt.tier?.libelle || null,   // 👈 maintenant dispo
+        tierLibelle: mvt.tier?.libelle || null,   
         tierCode: mvt.tier?.code || null,
         tierModel: mvt.tierModel || null,
         utilisateur: mvt.utilisateur?.name || null,
@@ -261,7 +256,7 @@ router.get('/recent/:caisseId', async (req, res) => {
 
     const mouvements = await MvtCaisse.find({
       caisse: caisseId,
-      etat: 'valide'
+      etat: 'ouverte'
     })
       .sort({ date: -1, createdAt: -1 }) // Les plus récents en premier
       .limit(limit)
@@ -269,7 +264,7 @@ router.get('/recent/:caisseId', async (req, res) => {
       .populate({ path: 'utilisateur', select: 'name' })
       .lean();
 
-    // 🔹 Résolution manuelle du tier selon tierModel
+    
     const tierModels = { Client, Fournisseur, Vehicule, Personnel, Banque, Tiers };
     for (let mvt of mouvements) {
       if (mvt.tier && mvt.tierModel && tierModels[mvt.tierModel]) {
@@ -278,7 +273,7 @@ router.get('/recent/:caisseId', async (req, res) => {
       }
     }
 
-    // Formater la réponse
+
     const mouvementsFormates = mouvements.map(mvt => ({
       _id: mvt._id,
       date: mvt.date,
@@ -303,7 +298,7 @@ router.get('/recent/:caisseId', async (req, res) => {
 router.get('/daily-summary/:caisseId', mouvementController.getDailySummary);
 
 
-// PUT /api/mouvements/:id/valider
+
 router.put('/:id/valider', checkRole(['responsable']) , async (req, res) => {
   try {
     const mouvement = await MvtCaisse.findById(req.params.id);
@@ -312,10 +307,9 @@ router.put('/:id/valider', checkRole(['responsable']) , async (req, res) => {
     if (mouvement.etat !== 'brouillon')
       return res.status(400).json({ message: "Ce mouvement est déjà traité" });
 
-    mouvement.etat = 'valide';
+    mouvement.etat = 'ouverte';
     await mouvement.save();
 
-    // Mettre à jour le solde de la caisse
     const caisse = await Caisse.findById(mouvement.caisse);
     if (mouvement.typeMouvement === 'encaissement') {
       caisse.soldeActuel += mouvement.montant;

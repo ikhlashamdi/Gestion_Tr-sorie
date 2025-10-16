@@ -72,8 +72,8 @@ export default function BanqueModal({ open, onClose, onCreated }) {
       setError("");
 
       const res = await axios.post("http://localhost:5000/api/banques", form);
-      onCreated("Banque", res.data); // on passe "Banque" comme modèle
-      onClose(); // ferme le modal
+      onCreated("Banque", res.data); 
+      onClose(); 
     } catch (err) {
       console.error(err);
       setError("Erreur lors de la création de la banque.");

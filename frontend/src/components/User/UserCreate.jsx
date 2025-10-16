@@ -10,20 +10,22 @@ function UserCreate() {
     email: '',
     password: '',
     role: 'caissier',
-    societe: '' // Set initial state to empty string
+    societes: []
   });
   
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  // FIX: Define the companies state variable
+
   const [companies, setCompanies] = useState([]); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'societe') {
+        setFormData(prev => ({ ...prev, societes: [value] })); 
+    } else {
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Calcul de la force du mot de passe
+   }
     if (name === 'password') {
       calculatePasswordStrength(value);
     }
@@ -60,7 +62,7 @@ function UserCreate() {
         email: '', 
         password: '', 
         role: 'caissier', 
-        societe: '' 
+        societes : [] 
       });
       setPasswordStrength(0);
     } catch (error) {
@@ -84,21 +86,22 @@ function UserCreate() {
     return 'Fort';
   };
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const { data } = await api.get('/companies');
-        setCompanies(data);
-        // Optional: if you want to pre-select the first company
-        if (data.length > 0) {
-            setFormData(prev => ({ ...prev, societe: data[0]._id }));
-        }
-      } catch (error) {
-        handleError("Erreur lors du chargement des sociétés.");
-      }
-    };
-    fetchCompanies();
-  }, []); 
+// UserCreate.jsx (vers la ligne 128)
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const { data } = await api.get('/companies');
+        setCompanies(data);
+        if (data.length > 0) {
+            // CORRECTION: Utiliser societes comme un tableau
+            setFormData(prev => ({ ...prev, societes: [data[0]._id] })); 
+        }
+      } catch (error) {
+        handleError("Erreur lors du chargement des sociétés.");
+      }
+    };
+    fetchCompanies();
+  }, []);
 
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-xl shadow-lg">
@@ -163,7 +166,7 @@ function UserCreate() {
           {/* Mot de passe */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 flex items-center">
-              <Lock className="mr-2 text-gray-500" size={16} />
+             
               Mot de passe
             </label>
             <div className="relative">
@@ -234,27 +237,31 @@ function UserCreate() {
               </div>
             </div>
           </div>
-        {/* Société */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 flex items-center">
-            <Briefcase className="mr-2 text-gray-500" size={16} />
-            Société
-          </label>
-          <div className="relative">
-            <select
-              name="societe"
-              value={formData.societe}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
-              required
-            >
-              <option value="" disabled>Sélectionner une société</option>
+
+        {/* Société */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 flex items-center">
+            <Briefcase className="mr-2 text-gray-500" size={16} />
+            Société
+          </label>
+          <div className="relative">
+            <select
+              name="societe" // Le nom que `handleChange` utilise
+              // CORRECTION: Lire la valeur à partir de formData.societes[0]
+              value={formData.societes[0] || ""} 
+              onChange={handleChange}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
+              required
+            >
+             <option value="" disabled>Sélectionner une société</option>
               {companies.map(company => (
                 <option key={company._id} value={company._id}>
                   {company.name}
                 </option>
-              ))}
-            </select>
+                  ))}
+            </select>
+          
+        
             <Briefcase className="absolute left-3 top-3.5 text-gray-400" size={18} />
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15 9.707l-1.414-1.414L10 11.293 6.414 7.707 5 9.121z"/></svg>

@@ -4,7 +4,7 @@ const express = require('express');
 
 const router = express.Router();
 
-// GET /api/fournisseurs?search=xxx
+
 router.get('/', async (req, res) => {
   try {
     const search = req.query.search || '';
@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/fournisseurs
+
 router.post('/', async (req, res) => {
   try {
     const fournisseur = new Fournisseur(req.body);
@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/fournisseurs/:id
+
 router.get('/:id', async (req, res) => {
   try {
     const fournisseur = await Fournisseur.findById(req.params.id).select('-__v');
@@ -50,7 +50,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /api/fournisseurs/:id
+
 router.put('/:id', async (req, res) => {
   try {
     const fournisseur = await Fournisseur.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-__v');
@@ -61,7 +61,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/fournisseurs/:id
 router.delete('/:id', async (req, res) => {
   try {
     const fournisseur = await Fournisseur.findByIdAndDelete(req.params.id);

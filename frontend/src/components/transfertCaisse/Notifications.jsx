@@ -134,7 +134,7 @@ export default function Notifications() {
     }
   };
 
-  // Créer une copie du tableau et l'inverser pour un affichage "du plus récent au plus ancien"
+
   const notificationsInversées = [...notifications].reverse();
 
   if (loading) {

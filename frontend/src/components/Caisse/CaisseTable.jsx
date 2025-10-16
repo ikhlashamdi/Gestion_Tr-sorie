@@ -78,7 +78,7 @@ export default function CaisseTable({
     });
 
     if (!res.ok) throw new Error("Échec de l'ouverture de la caisse");
-    onSearch(""); // rafraîchir la liste
+    onSearch("");
     alert("✅ Caisse ouverte avec succès !");
   } catch (err) {
     console.error(err);
@@ -115,10 +115,8 @@ const handleCloseCaisse = async (id) => {
   const getSortedItems = () => {
     let sortableItems = [...caisses];
 
-    // Tri par défaut sur la date (plus récent au plus ancien)
     sortableItems.sort((a, b) => new Date(b.dateCreation) - new Date(a.dateCreation));
 
-    // Tri manuel si l'utilisateur a choisi une colonne
     if (sortConfig.key) {
       sortableItems.sort((a, b) => {
         let aValue = a[sortConfig.key];
@@ -271,7 +269,7 @@ const handleCloseCaisse = async (id) => {
                 </div>
               </th>
               <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Société</th>
-              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Responsable</th>
+              <th className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider">Caissier</th>
               <th 
                 className="px-4 py-3 text-center text-sm font-bold text-gray-800 tracking-wider cursor-pointer"
                 onClick={() => handleSort("dateCreation")}

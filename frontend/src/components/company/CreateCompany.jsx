@@ -23,17 +23,15 @@ export default function SocieteCreate() {
       const { data } = await api.post("/companies", { name, address });
       handleSuccess("Société créée avec succès !");
       setLoading(false);
-      navigate("/societes"); // Redirection vers la liste
+      navigate("/societes"); 
     } catch (error) {
       handleError(error.response?.data?.message || error.message);
       setLoading(false);
     }
   };
 
-  // 🔹 Fonction pour gérer l'annulation et la redirection
   const handleCancel = () => {
-    navigate(-1); // navigate(-1) ramène à la page précédente
-    // Ou, pour une redirection spécifique : navigate("/dashboard");
+    navigate(-1); 
   };
 
   return (
@@ -73,18 +71,18 @@ export default function SocieteCreate() {
           />
         </div>
 
-        {/* 🔹 Conteneur pour les boutons "Annuler" et "Créer" */}
+ 
         <div className="flex justify-end space-x-4"> 
-          {/* 🔹 Bouton Annuler */}
+       
           <button
-            type="button" // 🔹 Le type "button" empêche la soumission du formulaire
+            type="button" 
             onClick={handleCancel}
             className="px-6 py-3 rounded-lg text-gray-700 font-medium transition-colors border border-gray-300 hover:bg-gray-100"
           >
             Annuler
           </button>
           
-          {/* Bouton de soumission */}
+        
           <button
             type="submit"
             disabled={loading}

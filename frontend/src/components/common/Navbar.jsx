@@ -5,8 +5,8 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import CompanySwitcher from './CompanySwitcher';
 
-// Initialisation de la connexion Socket.IO en dehors du composant
-const socket = io('http://localhost:5000'); // Adaptez l'URL à votre backend
+
+const socket = io('http://localhost:5000'); 
 
 const Navbar = () => {
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -61,7 +61,7 @@ const Navbar = () => {
         }
     }, [searchExpanded]);
 
-    // Fonction pour récupérer le nombre de notifications non lues
+
     const fetchUnreadCount = async () => {
         try {
             const res = await axios.get("http://localhost:5000/api/notifications/count", {
@@ -74,7 +74,7 @@ const Navbar = () => {
         }
     };
 
-    // Nouveau useEffect pour gérer la récupération des données utilisateur et des notifications
+    
     useEffect(() => {
         const fetchAllData = async () => {
             if (!token) {
@@ -83,7 +83,7 @@ const Navbar = () => {
             }
             
             try {
-                // 1. Récupérer d'abord les informations de l'utilisateur
+               
                 const userRes = await axios.get("http://localhost:5000/api/users/me", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -94,10 +94,10 @@ const Navbar = () => {
                     setProfileImage(`http://localhost:5000/uploads/${fetchedUser.profileImage}`);
                 }
 
-                // 2. Puis, récupérer le nombre de notifications non lues pour cet utilisateur
+              
                 fetchUnreadCount();
 
-                // 3. Connecter à la "room" de notifications Socket.IO
+               
                 if (fetchedUser._id) {
                     socket.emit('joinRoom', fetchedUser._id);
                 }
@@ -109,13 +109,13 @@ const Navbar = () => {
 
         fetchAllData();
 
-        // Écouteur d'événement Socket.IO pour les mises à jour en temps réel
+       
         socket.on('notifications_updated', () => {
             console.log("Événement 'notifications_updated' reçu. Mise à jour du compteur.");
-            fetchUnreadCount(); // Re-fetch the count to update the UI
+            fetchUnreadCount(); 
         });
 
-        // Fonction de nettoyage
+       
         return () => {
             socket.off('notifications_updated');
         };
@@ -232,12 +232,10 @@ const Navbar = () => {
             <div className={`flex items-center space-x-1 ${searchExpanded ? 'hidden' : 'flex'} md:flex`}>
                 <div className="hidden md:flex items-center space-x-1">
                     {user && <CompanySwitcher token={token} user={user} />}
-                    {/* Hardcoded count for mail icon - a good candidate for a future improvement */}
                     <button className="p-2 hover:bg-gray-100 rounded relative">
                         <Mail className="w-6 h-6" />
                         <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">4</span>
                     </button>
-                    {/* Dynamic count for bell icon */}
                     <button onClick={handleBellClick} className="p-2 hover:bg-gray-100 rounded relative">
                         <Bell className="w-6 h-6" />
                         {unreadCount > 0 && (
@@ -249,7 +247,7 @@ const Navbar = () => {
                     <div className="relative">{renderProfileButton}{renderProfileMenu}</div>
                 </div>
 
-                {/* Bouton "Plus" pour mobile */}
+              
                 <div className="flex md:hidden items-center relative">
                     <button
                         ref={mobileButtonRef}
@@ -262,7 +260,7 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* Overlay de recherche mobile */}
+        
             {searchExpanded && (
                 <div className="mobile-search-overlay fixed top-0 left-0 right-0 h-16 bg-white z-50 flex items-center px-4 md:hidden">
                     <button

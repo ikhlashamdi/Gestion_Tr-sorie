@@ -2,7 +2,7 @@ const express = require('express');
 const Vehicule = require('../Models/Vehicule');
 const router = express.Router();
 
-// GET /api/vehicules?search=xxx
+
 router.get('/', async (req, res) => {
   try {
     const search = req.query.search || '';
@@ -26,7 +26,6 @@ router.get('/', async (req, res) => {
 
 
 
-// Créer un véhicule
 router.post('/', async (req, res) => {
     try {
         const vehicule = new Vehicule(req.body);
@@ -38,7 +37,6 @@ router.post('/', async (req, res) => {
 });
 
 
-// Récupérer un véhicule par ID
 router.get('/:id', async (req, res) => {
     try {
         const vehicule = await Vehicule.findById(req.params.id).select('-__v');
@@ -49,7 +47,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Mettre à jour un véhicule
+
 router.put('/:id', async (req, res) => {
     try {
         const vehicule = await Vehicule.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-__v');
@@ -60,7 +58,6 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Supprimer un véhicule
 router.delete('/:id', async (req, res) => {
     try {
         const vehicule = await Vehicule.findByIdAndDelete(req.params.id);

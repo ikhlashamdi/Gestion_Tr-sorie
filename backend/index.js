@@ -55,9 +55,8 @@ app.use(cors());
 app.use(express.json());
 app.set("io", io);
 
-// ✅ Connexion à MongoDB et initialisation des données
 connectToDatabase().then(async () => {
-    // 1. Création du SUPER-ADMIN par défaut (s'il n'existe pas)
+    // 1. Création du SUPER-ADMIN par défaut 
     const superAdminExists = await User.findOne({ role: 'super-admin' });
     if (!superAdminExists) {
         const passwordHash = await bcrypt.hash("superadmin1234", 10);
@@ -66,7 +65,7 @@ connectToDatabase().then(async () => {
             email: "superadmin@gmail.com",
             password: passwordHash,
             role: "super-admin",
-            societe: null // ⚠️ Très important : le super-admin n'est lié à aucune société
+            societe: null 
         });
         await superAdminUser.save();
         console.log("✅ Super-Admin par défaut créé : superadmin@gmail.com / superadmin1234");
@@ -74,16 +73,9 @@ connectToDatabase().then(async () => {
         console.log("✅ Super-Admin par défaut déjà existant.");
     }
 
-    // 2. Création de la société par défaut
-    const companyName = "Société Générale";
-    let defaultCompany = await Company.findOne({ name: companyName });
-    if (!defaultCompany) {
-        defaultCompany = new Company({ name: companyName });
-        await defaultCompany.save();
-        console.log(`✅ Société par défaut "${companyName}" créée.`);
-    }
+  
 
-    // 3. Création de l'ADMIN par défaut (s'il n'existe pas)
+    // 2. Création de l'ADMIN par défaut 
     const adminExists = await User.findOne({ email: "admin@gmail.com" });
     if (!adminExists) {
         const passwordHash = await bcrypt.hash("admin1234", 10);
@@ -92,7 +84,7 @@ connectToDatabase().then(async () => {
             email: "admin@gmail.com",
             password: passwordHash,
             role: "admin",
-            societe: defaultCompany._id // 🔹 L'ID de l'objet Company est utilisé
+            societe: defaultCompany._id 
         });
         await adminUser.save();
         console.log("✅ Admin par défaut créé : admin@gmail.com / admin1234");

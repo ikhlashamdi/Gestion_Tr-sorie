@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
 });
 
 
-// ✅ Créer un personnel
+
 router.post('/', async (req, res) => {
   try {
     const personnel = new Personnel(req.body);
@@ -37,7 +37,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ Récupérer un personnel par ID
 router.get('/:id', async (req, res) => {
   try {
     const personnel = await Personnel.findById(req.params.id).select('-__v');
@@ -48,7 +47,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ✅ Mettre à jour un personnel
 router.put('/:id', async (req, res) => {
   try {
     const personnel = await Personnel.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-__v');
@@ -59,7 +57,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// ✅ Supprimer un personnel
+
 router.delete('/:id', async (req, res) => {
   try {
     const personnel = await Personnel.findByIdAndDelete(req.params.id);

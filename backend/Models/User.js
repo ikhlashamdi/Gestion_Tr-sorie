@@ -1,4 +1,3 @@
-// Models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
@@ -18,7 +17,6 @@ const UserSchema = new mongoose.Schema({
     }]
 });
 
-// ✅ Middleware pour forcer la société sauf pour super-admin
 UserSchema.pre('validate', function (next) {
     if (this.role !== 'super-admin' && (!this.societes || this.societes.length === 0)) {
         this.invalidate('societes', 'Au moins une société est requise pour ce rôle.');
@@ -26,7 +24,7 @@ UserSchema.pre('validate', function (next) {
     next();
 });
 
-// ✅ Hasher le mot de passe
+
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     try {

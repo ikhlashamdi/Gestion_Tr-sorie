@@ -3,18 +3,17 @@ import api from "../../api";
 import { handleError, handleSuccess } from "../../utils/toastUtils";
 import { ToastContainer } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save, XCircle } from 'lucide-react'; // Ajout d'icônes
+import { Loader2, Save, XCircle } from 'lucide-react'; 
 
 export default function SocieteEdit() {
   const navigate = useNavigate();
-  const { id } = useParams(); // ID de la société à modifier
+  const { id } = useParams(); 
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Charger les données de la société
   useEffect(() => {
     const fetchSociete = async () => {
       try {
@@ -43,17 +42,15 @@ export default function SocieteEdit() {
       const { data } = await api.put(`/companies/${id}`, { name, address });
       handleSuccess("Société mise à jour avec succès !");
       setSaving(false);
-      navigate("/societes"); // Redirection vers la liste
+      navigate("/societes"); 
     } catch (error) {
       handleError(error.response?.data?.message || error.message);
       setSaving(false);
     }
   };
 
-  // 🔹 Fonction pour gérer l'annulation et la redirection
   const handleCancel = () => {
-    navigate(-1); // navigate(-1) ramène à la page précédente
-    // Vous pouvez aussi utiliser navigate('/societes') si vous préférez
+    navigate(-1); 
   };
 
   if (loading) {
@@ -101,10 +98,9 @@ export default function SocieteEdit() {
           />
         </div>
 
-        {/* 🔹 Conteneur pour les boutons "Annuler" et "Sauvegarder" */}
         <div className="flex justify-end space-x-4">
           <button
-            type="button" // 🔹 Utilisation du type "button" pour éviter la soumission
+            type="button" 
             onClick={handleCancel}
             className="flex items-center px-6 py-3 rounded-lg text-gray-700 font-medium transition-colors border border-gray-300 hover:bg-gray-100"
           >

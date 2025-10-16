@@ -93,7 +93,7 @@ export default function CaisseModal({ isOpen, onClose, onSubmit }) {
       societe: userInfo.societe,
     };
 
-    onSubmit(dataToSend); // délègue la requête au composant parent
+    onSubmit(dataToSend); 
     setLoading(false);
     onClose();
   };

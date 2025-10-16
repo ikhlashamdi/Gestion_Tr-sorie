@@ -21,7 +21,7 @@ const notificationSchema = new mongoose.Schema({
   },
   relatedId: {
     type: mongoose.Schema.Types.ObjectId,
-    refPath: 'type', // Optionnel, pour plus de flexibilité
+    refPath: 'type', 
   },
   createdAt: {
     type: Date,

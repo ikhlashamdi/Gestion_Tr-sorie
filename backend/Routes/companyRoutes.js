@@ -4,12 +4,6 @@ const verifyToken = require("../Middlewares/Auth");
 const checkRole = require("../Middlewares/roleMiddleware"); 
 const Company = require("../Models/Company");
 
-// ----------------------------------------------------------------
-// ROUTES POUR GÉRER LES SOCIÉTÉS
-// ----------------------------------------------------------------
-
-// Créer une nouvelle société
-// POST /api/companies/
 router.post('/', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const { name, address } = req.body;
@@ -24,10 +18,7 @@ router.post('/', verifyToken, checkRole(['super-admin']), async (req, res) => {
     }
 });
 
-// Récupérer les sociétés
-// GET /api/companies/
-// Cette route est maintenant accessible à plusieurs rôles
-// routes/company.js
+
 router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', 'caissier']), async (req, res) => {
     try {
         let companies;
@@ -45,9 +36,6 @@ router.get('/', verifyToken, checkRole(['super-admin', 'admin', 'responsable', '
 });
 
 
-// Récupérer une société par ID
-// GET /api/companies/:id
-// Seul un super-admin peut récupérer n'importe quelle société par ID
 router.get('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const company = await Company.findById(req.params.id);
@@ -62,8 +50,6 @@ router.get('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => 
     }
 });
 
-// Mettre à jour une société par ID
-// PUT /api/companies/:id
 router.put('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const { name, address } = req.body;
@@ -85,8 +71,7 @@ router.put('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => 
     }
 });
 
-// Supprimer une société par ID
-// DELETE /api/companies/:id
+
 router.delete('/:id', verifyToken, checkRole(['super-admin']), async (req, res) => {
     try {
         const deletedCompany = await Company.findByIdAndDelete(req.params.id);

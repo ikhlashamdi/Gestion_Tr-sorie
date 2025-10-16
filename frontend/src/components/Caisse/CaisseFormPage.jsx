@@ -29,7 +29,6 @@ export default function CaisseFormPage() {
     code: "",
   });
 
-  // 1️⃣ Récupération du token et utilisateur courant
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const storedToken = localStorage.getItem("token");
@@ -54,7 +53,6 @@ export default function CaisseFormPage() {
     fetchCurrentUser();
   }, []);
 
-  // 2️⃣ Récupération des utilisateurs assignables pour admin ou super-admin
   useEffect(() => {
     const fetchAssignableUsers = async () => {
       if (!token || !currentUser) return;
@@ -76,7 +74,7 @@ export default function CaisseFormPage() {
         });
 
         const filteredUsers = res.data.filter(
-          (user) => user.role === "caissier" || user.role === "responsable"
+          (user) => user.role === "caissier" 
         );
         setAssignableUsers(filteredUsers);
       } catch (err) {
@@ -89,7 +87,6 @@ export default function CaisseFormPage() {
     fetchAssignableUsers();
   }, [currentUser, token]);
 
-// 3️⃣ Récupération des sociétés en fonction du rôle de l'utilisateur
   useEffect(() => {
     const fetchSocietes = async () => {
       if (!currentUser) return;
@@ -118,7 +115,6 @@ export default function CaisseFormPage() {
     fetchSocietes();
   }, [currentUser, token]);
 
-  // 4️⃣ Récupération d'une caisse existante
   useEffect(() => {
     const fetchCaisse = async () => {
       if (id && token) {
@@ -136,7 +132,7 @@ export default function CaisseFormPage() {
     fetchCaisse();
   }, [id, token, navigate]);
 
-  // 5️⃣ Appliquer la caisse au formulaire
+  
   useEffect(() => {
     if (fetchedCaisse) {
       setForm({
@@ -157,7 +153,6 @@ export default function CaisseFormPage() {
     }
   }, [fetchedCaisse, availableSocietes]);
 
-  // 6️⃣ Gestion changement champs formulaire
     const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -171,7 +166,6 @@ export default function CaisseFormPage() {
 
       let newSocieteValue = "";
       if (filtered.length > 0) {
-        // ⭐ Mise à jour : S'il y a des sociétés filtrées, on prend la première par défaut.
         newSocieteValue = filtered[0]._id;
       }
 
@@ -189,7 +183,6 @@ export default function CaisseFormPage() {
   };
 
 
-  // 7️⃣ Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -206,7 +199,6 @@ export default function CaisseFormPage() {
 
     const payload = { ...form };
     
-    // ⭐ AJOUT : Vérification côté client plus stricte
     if ((currentUser?.role === "super-admin" || currentUser?.role === "admin") && !payload.societe) {
       setError("❌ La société est requise pour créer une caisse.");
       return;
@@ -305,10 +297,10 @@ export default function CaisseFormPage() {
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="">-- Sélectionner un caissier/responsable --</option>
+                      <option value="">-- Sélectionner un caissier --</option>
                       {assignableUsers.map(user => (
                         <option key={user._id} value={user._id}>
-                          {user.name} ({user.role})
+                          {user.name} 
                         </option>
                       ))}
                     </select>

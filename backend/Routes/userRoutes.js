@@ -8,23 +8,18 @@ const bcrypt = require('bcrypt');
 const checkRole = require('../Middlewares/roleMiddleware'); 
 const { sendUserCreatedEmail } = require("../Services/emailService");
 
-// ROUTES UTILISATEURS
 router.post("/change-password", verifyToken, userController.changePassword);
 router.post("/upload-image", verifyToken, upload.single("image"), userController.uploadImage);
 router.get("/me", verifyToken, userController.getCurrentUser);
 
-// =================================================================
-// ROUTES POUR ADMINS & SUPER-ADMIN
-// =================================================================
 
-// Création d'un utilisateur
 router.post('/create', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
     try {
         const { name, email, password, role, societes } = req.body;
         const currentUserRole = req.user.role;
         const currentUserSocietes = req.user.societes || [];
 
-        // Vérification des droits pour l'admin
+   
         if (currentUserRole === 'admin') {
             if (role === 'super-admin' || role === 'admin') {
                 return res.status(403).json({ message: "Un administrateur ne peut créer qu'un responsable ou un caissier." });
@@ -55,7 +50,7 @@ router.post('/create', verifyToken, checkRole(['super-admin', 'admin']), async (
     }
 });
 
-// Récupérer tous les utilisateurs
+
 router.get('/', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
     try {
         let query = {};
@@ -88,7 +83,7 @@ router.get('/stats', verifyToken, checkRole(['super-admin', 'admin']), async (re
     }
 });
 
-// Récupérer un utilisateur par ID
+
 router.get('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
     try {
         const user = await User.findById(req.params.id).populate('societes').select("-password");
@@ -106,7 +101,7 @@ const intersection = user.societes.map(s => s._id.toString()).some(id => userSoc
     }
 });
 
-// Mettre à jour un utilisateur
+
 router.put('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
     try {
         const { name, email, role, societes } = req.body;
@@ -145,7 +140,7 @@ router.get('/societes/:ids', verifyToken, checkRole(['super-admin', 'admin']), a
 
     const societeIds = idsParam.split(',').map(id => id.trim());
     
-    // Trouve tous les utilisateurs appartenant à **au moins une** des sociétés
+
     const users = await User.find({ societes: { $in: societeIds } }).select('name role societes');
 
     res.status(200).send(users);
@@ -156,13 +151,11 @@ router.get('/societes/:ids', verifyToken, checkRole(['super-admin', 'admin']), a
 });
 
 
-// Supprimer un utilisateur
 router.delete('/:id', verifyToken, checkRole(['super-admin', 'admin']), async (req, res) => {
     try {
         const userToDelete = await User.findById(req.params.id);
         if (!userToDelete) return res.status(404).json({ message: "Utilisateur non trouvé" });
 
-        // Vérification pour les admins
         if (req.user.role === 'admin') {
             const intersection = userToDelete.societes.map(s => s.toString()).some(s => req.user.societes.includes(s));
             if (!intersection) return res.status(403).json({ message: "Accès refusé." });

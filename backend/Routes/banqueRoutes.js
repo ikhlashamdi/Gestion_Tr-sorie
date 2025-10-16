@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
     res.status(500).send({ error: 'Erreur serveur', details: err });
   }
 });
-// Créer une banque
+
 router.post('/', async (req, res) => {
     try {
         const banque = new Banque(req.body);
@@ -34,7 +34,6 @@ router.post('/', async (req, res) => {
 });
 
 
-// Récupérer une banque par ID
 router.get('/:id', async (req, res) => {
     try {
         const banque = await Banque.findById(req.params.id).select('-__v');
@@ -45,7 +44,6 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Mettre à jour une banque
 router.put('/:id', async (req, res) => {
     try {
         const banque = await Banque.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-__v');
@@ -56,7 +54,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Supprimer une banque
+
 router.delete('/:id', async (req, res) => {
     try {
         const banque = await Banque.findByIdAndDelete(req.params.id);

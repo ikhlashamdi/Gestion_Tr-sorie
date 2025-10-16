@@ -2,7 +2,7 @@ const express = require('express');
 const Tier = require('../Models/Tier');
 const router = express.Router();
 
-// 🔍 GET : liste des tiers avec recherche facultative
+
 router.get('/', async (req, res) => {
   try {
     const search = req.query.search || '';
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 });
 
 
-// Créer un tier
+
 router.post('/', async (req, res) => {
     try {
         const tier = new Tier(req.body);
@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
 });
 
 
-// Récupérer un tier par ID
+
 router.get('/:id', async (req, res) => {
     try {
         const tier = await Tier.findById(req.params.id).select('-__v');
@@ -47,7 +47,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Mettre à jour un tier
+
 router.put('/:id', async (req, res) => {
     try {
         const tier = await Tier.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-__v');
@@ -58,7 +58,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Supprimer un tier
+
 router.delete('/:id', async (req, res) => {
     try {
         const tier = await Tier.findByIdAndDelete(req.params.id);

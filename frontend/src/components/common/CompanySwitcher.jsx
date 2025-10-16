@@ -41,7 +41,7 @@ export default function CompanySwitcher({ token }) {
                     }
                 });
                 setCompanies([
-                    { _id: "all", name: "Toutes les sociétés" }, // 🔹 option spéciale
+                    { _id: "all", name: "Toutes les sociétés" }, 
                     ...data
                 ]);
                 const savedCompanyId = localStorage.getItem('selectedCompanyId');

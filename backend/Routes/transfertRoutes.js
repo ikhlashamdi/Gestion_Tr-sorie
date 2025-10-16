@@ -1,4 +1,4 @@
-// routes/transfertRoutes.js
+
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
@@ -9,7 +9,6 @@ const Notification = require("../Models/Notification");
 const PDFDocument = require("pdfkit");
 const verifyToken = require("../Middlewares/Auth");
 
-// Fonction utilitaire pour émettre un événement Socket.IO
 const emitSocketEvent = (req, eventName, room, data) => {
     const io = req.app.get("io");
     if (io) {
@@ -42,7 +41,7 @@ const getTempsEcoule = (date) => {
     return `${differenceEnSecondes} s`;
 };
 
-// POST /api/transferts/demander
+
 // Crée une nouvelle demande de transfert et une notification pour le destinataire.
 router.post('/demander', verifyToken, async (req, res) => {
     const { caisseSource, caisseDestination, montant, motif } = req.body;
@@ -97,7 +96,7 @@ router.post('/demander', verifyToken, async (req, res) => {
     }
 });
 
-// GET /api/transferts/notifications
+
 router.get('/notifications', verifyToken, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -121,7 +120,6 @@ router.get('/notifications', verifyToken, async (req, res) => {
             emetteur: notif.caisseSource.utilisateur.name,
             message: `Nouvelle demande de transfert de ${notif.montant} DT de la part de ${notif.caisseSource.utilisateur.name}.`,
             type: 'demande_transfert',
-            // Ajoutez le temps écoulé ici
             tempsEcoule: getTempsEcoule(notif.date)
         }));
 
@@ -132,7 +130,7 @@ router.get('/notifications', verifyToken, async (req, res) => {
 });
 
 
-// POST /api/transferts/accepter/:transfertId
+
 router.post('/accepter/:transfertId', verifyToken, async (req, res) => {
     try {
         const { transfertId } = req.params;
@@ -156,7 +154,7 @@ router.post('/accepter/:transfertId', verifyToken, async (req, res) => {
             return res.status(404).json({ message: "Caisse source ou destination introuvable." });
         }
 
-        // Mettez à jour les soldes
+   
         source.soldeActuel -= transfert.montant;
         destination.soldeActuel += transfert.montant;
 
@@ -331,7 +329,7 @@ router.get("/", verifyToken, async (req, res) => {
         const limit = parseInt(pageSize, 10) || 10;
         const skip = (pageNumber - 1) * limit;
 
-        // 2. Création de l'objet de filtre
+ 
         let filtre = {};
 
         if (startDate && endDate) {
@@ -350,10 +348,10 @@ router.get("/", verifyToken, async (req, res) => {
          if (statut && statut !== 'Toutes les caisses') {
             filtre.statut = statut;
         }
-        // 3. Compter le nombre total de transferts correspondant aux filtres
+        //  Compter le nombre total de transferts correspondant aux filtres
         const totalCount = await Transfert.countDocuments(filtre);
 
-        // 4. Récupération des transferts paginés
+    
         const transferts = await Transfert.find(filtre)
             .populate("caisseSource", "libelle")
             .populate("caisseDestination", "libelle")
@@ -362,7 +360,7 @@ router.get("/", verifyToken, async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        // 5. Envoi de la réponse avec les données paginées et le total
+       
         res.json({
             transferts: transferts,
             total: totalCount,

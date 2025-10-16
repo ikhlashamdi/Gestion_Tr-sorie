@@ -5,7 +5,6 @@ const Caisse = require("../Models/Caisse");
 const PDFDocument = require("pdfkit"); 
 const ExcelJS = require("exceljs");    
 
-// /api/rapports/journal-caisse?caisseId=XXX&format=pdf
 router.get("/journal-caisse", async (req, res) => {
   const { caisseId, format } = req.query;
 

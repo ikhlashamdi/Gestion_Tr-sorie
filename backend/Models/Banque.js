@@ -1,4 +1,4 @@
-// models/Banque.js
+
 const mongoose = require('mongoose');
 
 const banqueSchema = new mongoose.Schema({

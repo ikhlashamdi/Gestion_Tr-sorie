@@ -27,7 +27,6 @@ export default function ClientForm({ onSubmit, client, onCancel, isEdit = false 
 
   return (
     <div className="min-h-screen w-full bg-white p-4 sm:p-8">
-      {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
@@ -55,7 +54,7 @@ export default function ClientForm({ onSubmit, client, onCancel, isEdit = false 
         <div className="border-b border-gray-200 mt-4"></div>
       </div>
 
-      {/* Form Section */}
+
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="bg-white rounded-lg">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

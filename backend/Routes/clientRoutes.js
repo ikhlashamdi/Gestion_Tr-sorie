@@ -1,10 +1,10 @@
-// routes/client.js
+
 
 const express = require('express');
 const Client = require('../Models/Client');
 const router = express.Router();
 
-// ✅ Récupérer tous les clients (avec recherche)
+
 router.get('/', async (req, res) => {
   try {
     const search = req.query.search || '';
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ Créer un client
+
 router.post('/', async (req, res) => {
   try {
     const client = new Client(req.body);
@@ -40,7 +40,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ Récupérer un client par ID
 router.get('/:id', async (req, res) => {
   try {
     const client = await Client.findById(req.params.id).select('-__v');
@@ -51,7 +50,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ✅ Mettre à jour un client
 router.put('/:id', async (req, res) => {
   try {
     const client = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-__v');

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { handleError, handleSuccess } from '../utils/toastUtils';
+import { Mail, Lock } from 'lucide-react';
 
 function Login({ setIsAuthenticated }) {
   const [loginInfo, setLoginInfo] = useState({
@@ -16,157 +17,96 @@ function Login({ setIsAuthenticated }) {
     setLoginInfo(prevInfo => ({ ...prevInfo, [name]: value }));
   };
 
-const handleLogin = async (e) => {
-  e.preventDefault();
-  const { email, password } = loginInfo;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const { email, password } = loginInfo;
 
-  if (!email || !password) {
-    return handleError('Email and password are required');
-  }
+    if (!email || !password) {
+      return handleError('Email et mot de passe requis');
+    }
 
-  try {
-    const url = `http://localhost:5000/api/auth/login`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(loginInfo)
-    });
+    try {
+      const url = `http://localhost:5000/api/auth/login`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginInfo)
+      });
 
-    const result = await response.json();
-    const { message, token, user, error } = result;
+      const result = await response.json();
+      const { message, token, user, error } = result;
 
-    if (token) {
-      // 🔹 Stocker le token et l'utilisateur
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
 
-      if (setIsAuthenticated) setIsAuthenticated(true);
-      handleSuccess('Login successful!');
+        if (setIsAuthenticated) setIsAuthenticated(true);
+        handleSuccess('Connexion réussie !');
 
-      // 🔹 Redirection selon rôle
-      if (user.role === "admin") {
-        navigate('/home');
-      } else if (user.role === "responsable") {
         navigate('/home');
       } else {
-        navigate('/home');
+        handleError(error?.details?.[0]?.message || message || 'Échec de connexion.');
       }
-    } else {
-      handleError(error?.details?.[0]?.message || message || 'Login failed.');
+    } catch (err) {
+      handleError(err.message || 'Erreur inattendue.');
     }
-  } catch (err) {
-    handleError(err.message || 'Unexpected error.');
-  }
-};
-
+  };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: "var(--light-gray)" }}
-    >
-      <div
-        className="bg-white p-8 md:p-12 rounded-lg w-full max-w-md shadow-xl"
-        style={{ color: "var(--dark-gray)" }}
-      >
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          <span style={{ color: "var(--primary)" }}>Log in</span> to your
-          account
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-purple-100">
+      <div className="bg-white/70 backdrop-blur-md border border-gray-200 shadow-2xl p-10 rounded-2xl w-full max-w-md">
+        <h1 className="text-3xl font-extrabold text-center text-indigo-700 mb-6">
+          Connexion
         </h1>
+        <p className="text-center text-gray-600 mb-8">
+          Entrez vos identifiants pour accéder à votre compte
+        </p>
 
         <form onSubmit={handleLogin} className="space-y-6">
+          {/* Champ Email */}
           <div className="relative">
+            <Mail className="absolute left-3 top-4 text-gray-400" size={20} />
             <input
               id="email"
               type="email"
               name="email"
               value={loginInfo.email}
               onChange={handleChange}
-              placeholder=" "
-              className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-              style={{
-                borderColor: "var(--med-light-gray)",
-                backgroundColor: "white",
-              }}
+              placeholder="Adresse e-mail"
+              className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-3 text-base focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 outline-none transition duration-200"
             />
-            <label
-              htmlFor="email"
-              className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-              style={{
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            >
-              Email
-            </label>
-            <style>{`
-              input:focus + label,
-              input:not(:placeholder-shown) + label {
-                top: 0 !important;
-                left: 0.5rem !important;
-                font-size: 12px;
-                color: var(--primary);
-              }
-              input:focus {
-                border-color: var(--primary);
-              }
-            `}</style>
           </div>
 
+          {/* Champ Mot de passe */}
           <div className="relative">
+            <Lock className="absolute left-3 top-4 text-gray-400" size={20} />
             <input
               id="password"
               type="password"
               name="password"
               value={loginInfo.password}
               onChange={handleChange}
-              placeholder=" "
-              className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-              style={{
-                borderColor: "var(--med-light-gray)",
-                backgroundColor: "white",
-              }}
+              placeholder="Mot de passe"
+              className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-3 text-base focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 outline-none transition duration-200"
             />
-            <label
-              htmlFor="password"
-              className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-              style={{
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            >
-              Password
-            </label>
-            <style>{`
-              input:focus + label,
-              input:not(:placeholder-shown) + label {
-                top: 0 !important;
-                left: 0.5rem !important;
-                font-size: 12px;
-                color: var(--primary);
-              }
-              input:focus {
-                border-color: var(--primary);
-              }
-            `}</style>
           </div>
 
+          {/* Bouton de connexion */}
           <button
             type="submit"
-            className="w-full text-white font-semibold text-lg rounded-md cursor-pointer py-2.5 transition duration-200 shadow-md hover:shadow-lg"
-            style={{ backgroundColor: "var(--primary)" }}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-lg rounded-lg py-3 shadow-lg transform hover:scale-[1.02] transition duration-200"
           >
-            Login
+            Se connecter
           </button>
 
-          <p className="text-center text-base mt-2" style={{ color: "var(--gray)" }}>
-            Don’t have an account?{" "}
+          {/* Lien vers l'inscription */}
+          <p className="text-center text-gray-600 text-base mt-3">
+            Pas encore de compte ?{' '}
             <Link
               to="/signup"
-              style={{ color: "var(--accent)", fontWeight: "500" }}
-              className="hover:underline"
+              className="text-indigo-600 font-semibold hover:underline"
             >
-              Signup
+              S'inscrire
             </Link>
           </p>
         </form>

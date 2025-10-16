@@ -1,6 +1,6 @@
-// controllers/mouvementController.js
 
-const MvtCaisse = require('../Models/MvtCaisse'); // Assurez-vous d'importer votre modèle
+
+const MvtCaisse = require('../Models/MvtCaisse'); 
 const mongoose = require('mongoose');
 
 exports.getDailySummary = async (req, res) => {
@@ -10,12 +10,11 @@ exports.getDailySummary = async (req, res) => {
         
         const caisseObjectId = new mongoose.Types.ObjectId(caisseId);
         
-        // Calcul de la date de début
+        
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - (days - 1));
         startDate.setHours(0, 0, 0, 0);
 
-        // 1. Pipeline d'Agrégation OPTIMISÉ (Réduit de 3 à 2 étapes d'agrégation)
         const aggregationResult = await MvtCaisse.aggregate([
             {
                 $match: {
@@ -23,7 +22,6 @@ exports.getDailySummary = async (req, res) => {
                     date: { $gte: startDate }
                 }
             },
-            // Regrouper par date et consolider les encaissements/décaissements en une seule étape
             {
                 $group: {
                     _id: {
@@ -33,19 +31,16 @@ exports.getDailySummary = async (req, res) => {
                     },
                     encaissements: {
                         $sum: {
-                            // Sépare et somme en utilisant le typeMouvement
                             $cond: [{ $eq: ["$typeMouvement", "encaissement"] }, "$montant", 0]
                         }
                     },
                     decaissements: {
                         $sum: {
-                            // Sépare et somme en utilisant le typeMouvement
                             $cond: [{ $eq: ["$typeMouvement", "decaissement"] }, "$montant", 0]
                         }
                     }
                 }
             },
-            // Projeter et Trier (comme précédemment)
             {
                 $project: {
                     _id: 0,
@@ -68,7 +63,6 @@ exports.getDailySummary = async (req, res) => {
             { $sort: { date: 1 } }
         ]);
 
-        // 2. Remplir les jours manquants avec des zéros (Logique inchangée, elle est correcte)
         const dailyData = {};
         for (let i = 0; i < days; i++) {
             const date = new Date(startDate);
@@ -77,7 +71,6 @@ exports.getDailySummary = async (req, res) => {
             dailyData[dateStr] = { date: dateStr, encaissements: 0, decaissements: 0 };
         }
 
-        // Fusionner les résultats de l'agrégation
         aggregationResult.forEach(item => {
             if (dailyData[item.date]) {
                 dailyData[item.date] = item;

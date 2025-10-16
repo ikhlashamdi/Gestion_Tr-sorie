@@ -16,7 +16,6 @@ export default function CaisseList() {
       fetchCaisses(storedToken); 
     }
 
-    // Gestion du changement de société
     const handleCompanyChange = () => {
       if (storedToken) fetchCaisses(storedToken);
     };
@@ -27,7 +26,6 @@ export default function CaisseList() {
     };
   }, []);
 
-  // 🔹 Fonction pour récupérer les caisses
   const fetchCaisses = async (tokenParam, search = "") => {
     const t = tokenParam || token;
     if (!t) {
@@ -36,7 +34,7 @@ export default function CaisseList() {
     }
 
     try {
-      const selectedCompanyId = localStorage.getItem("selectedCompanyId"); // société sélectionnée
+      const selectedCompanyId = localStorage.getItem("selectedCompanyId"); 
 
       const res = await axios.get("http://localhost:5000/api/caisses", {
         headers: {
@@ -54,7 +52,6 @@ export default function CaisseList() {
     }
   };
 
-  // 🔹 Supprimer une caisse
   const handleDelete = async (id) => {
     if (!window.confirm("Supprimer cette caisse ?")) return;
 
@@ -64,16 +61,14 @@ export default function CaisseList() {
           Authorization: `Bearer ${token}`,
         },
       });
-      fetchCaisses(); // rafraîchir la liste après suppression
+      fetchCaisses(); 
     } catch (err) {
       console.error("Erreur suppression :", err);
     }
   };
 
-  // 🔹 Éditer une caisse
   const handleEdit = (caisse) => navigate(`/caisses/${caisse._id}`);
 
-  // 🔹 Ajouter une nouvelle caisse
   const handleAdd = () => navigate("/caisses/nouveau");
 
   return (

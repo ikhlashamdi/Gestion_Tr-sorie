@@ -8,8 +8,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// 🎉🎉 MODIFICATION ICI 🎉🎉
-// La fonction accepte maintenant un paramètre 'password'
+
 exports.sendUserCreatedEmail = async (to, name, password) => { 
     try {
         const mailOptions = {

@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 
 const Sidebar = () => {
-  // Récupère l'état d'ouverture/fermeture et la fonction de mise à jour depuis le store
   const dopen = useAppStore((state) => state.dopen);
   const updateDopen = useAppStore((state) => state.updateOpen);
   
@@ -41,7 +40,6 @@ const Sidebar = () => {
     return dopen ? 'min(max(20vw, 175px), 275px)' : '64px';
   }
 
-  // Gère le redimensionnement de la barre latérale
   useEffect(() => {
     function handleResize() {
       setSidebarWidth(getSidebarWidth());
@@ -51,7 +49,6 @@ const Sidebar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [dopen]);
 
-  // Initialise l'état `dopen` et le rôle de l'utilisateur depuis localStorage
   useEffect(() => {
     const savedDopen = localStorage.getItem('dopen');
     if (savedDopen !== null) {
@@ -68,9 +65,8 @@ const Sidebar = () => {
         setIsSuperAdmin(false);
       }
     }
-  }, []); // Exécuté une seule fois au montage du composant
+  }, []); 
 
-  // Sauvegarde l'état de `dopen` dans localStorage à chaque changement
   useEffect(() => {
     localStorage.setItem('dopen', dopen);
   }, [dopen]);

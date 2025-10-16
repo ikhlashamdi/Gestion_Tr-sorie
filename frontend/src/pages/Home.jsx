@@ -45,9 +45,6 @@ const Home = () => {
     const [loadingDailyStats, setLoadingDailyStats] = useState(false);
 
 
-    // #########################################
-    // # 1. EFFETS ET LOGIQUE DE CHARGEMENT
-    // #########################################
 
     // Charger l'utilisateur depuis le localStorage
     useEffect(() => {
@@ -86,9 +83,7 @@ const Home = () => {
     }, [activeCaisse]);
 
 
-    // #########################################
-    // # 2. FONCTIONS DE RÉCUPÉRATION (FETCH)
-    // #########################################
+
 
     const fetchUsers = async () => {
         try {
@@ -165,9 +160,7 @@ const Home = () => {
         }
     };
 
-    // #########################################
-    // # 3. GESTION DES ÉVÉNEMENTS
-    // #########################################
+   
 
     const handleCaisseChange = (e) => {
         const selectedId = e.target.value;
@@ -194,9 +187,7 @@ const Home = () => {
     }
 
 
-    // #########################################
-    // # 4. RENDER
-    // #########################################
+ 
 
     if (loading) {
         return (
@@ -250,9 +241,7 @@ const Home = () => {
                 </button>
             </div>
 
-            {/* ######################################### */}
-            {/* VUE ADMIN/SUPER-ADMIN */}
-            {/* ######################################### */}
+         
             {isAdminView ? (
                 <>
                     {/* Cartes de statistiques (Admin) */}
@@ -375,9 +364,7 @@ const Home = () => {
                     </div>
                 </>
             ) : (
-                /* ######################################### */
-                /* VUE CAISSIER / RESPONSABLE */
-                /* ######################################### */
+             
                 <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">Mes Caisses et Solde</h2>
@@ -476,20 +463,6 @@ const Home = () => {
                     
                     {/* ACTIONS RAPIDES */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <ActionButton 
-                            icon={PlusCircle} 
-                            label="Nouvel Encaissement" 
-                            color="green"
-                            link={`/mvt-caisse/new?type=entree&caisseId=${activeCaisse?._id}`}
-                            disabled={!activeCaisse}
-                        />
-                        <ActionButton 
-                            icon={MinusCircle} 
-                            label="Nouveau Décaissement" 
-                            color="red" 
-                            link={`/mvt-caisse/new?type=sortie&caisseId=${activeCaisse?._id}`}
-                            disabled={!activeCaisse}
-                        />
                         <ActionButton 
                             icon={ArrowRightLeft} 
                             label="Transfert de Fonds" 

@@ -1,6 +1,8 @@
 const User = require('../Models/User');
+const Company = require('../Models/Company');
 const jwt = require('jsonwebtoken');
 const { registerValidation, loginValidation } = require('../Middlewares/AuthValidation');
+const bcrypt = require('bcrypt');
 
 // Enregistrer un utilisateur
 const registerUser = async (req, res) => {
@@ -8,16 +10,41 @@ const registerUser = async (req, res) => {
     if (error) return res.status(400).json({ message: error.details[0].message });
 
     try {
-        const userExists = await User.findOne({ email: req.body.email });
-        if (userExists) return res.status(400).json({ message: 'Utilisateur déjà existant' });
+        const { name, email, password, societe, role } = req.body;
 
-        const newUser = new User(req.body);
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: 'Utilisateur déjà existant' });
+        }
+
+        let company = await Company.findOne({ name: societe });
+        if (!company) {
+            company = await Company.create({ name: societe });
+        }
+         
+        
+        const newUser = new User({
+            name,
+            email,
+            password,
+            societes: [company._id],
+            role
+        });
+
         await newUser.save();
-        res.status(201).json({ success: true, message: 'Utilisateur enregistré avec succès' });
+
+    res.status(201).json({ 
+        success: true, 
+        message: 'Utilisateur enregistré avec succès', 
+        userId: newUser._id, 
+        role: newUser.role 
+    });
     } catch (error) {
+        console.error('Erreur inscription:', error);
         res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
     }
 };
+
 
 // Connecter un utilisateur
 const loginUser = async (req, res) => {
@@ -26,13 +53,22 @@ const loginUser = async (req, res) => {
 
     try {
         const user = await User.findOne({ email: req.body.email });
-        if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
 
-        const validPassword = await user.comparePassword(req.body.password);
-        if (!validPassword) return res.status(401).json({ message: 'Utilisateur non trouvé' });
+      
+        if (!user || !await user.comparePassword(req.body.password)) {
+            return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+        }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ message: 'Connexion réussie', token });
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+            expiresIn: '1h',
+        });
+
+        
+        const userWithoutPassword = user.toObject();
+        delete userWithoutPassword.password;
+
+        res.status(200).json({ message: 'Connexion réussie', token, user: userWithoutPassword });
+
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }

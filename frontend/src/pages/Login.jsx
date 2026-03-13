@@ -2,174 +2,119 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { handleError, handleSuccess } from '../utils/toastUtils';
+import { Mail, Lock } from 'lucide-react';
 
 function Login({ setIsAuthenticated }) {
-    const [loginInfo, setLoginInfo] = useState({
-        email: '',
-        password: ''
-    });
+  const [loginInfo, setLoginInfo] = useState({
+    email: '',
+    password: ''
+  });
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setLoginInfo(prevInfo => ({ ...prevInfo, [name]: value }));
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setLoginInfo(prevInfo => ({ ...prevInfo, [name]: value }));
+  };
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        const { email, password } = loginInfo;
-        if (!email || !password) {
-            return handleError('Email and password are required');
-        }
-        try {
-            const url = `http://localhost:5000/api/auth/login`;
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(loginInfo)
-            });
-            const result = await response.json();
-            const { message, token, error } = result;
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const { email, password } = loginInfo;
 
-            if (token) {
-                localStorage.setItem('token', token);
-                // Mettre à jour l'état d'authentification dans le parent (if App.jsx passes it)
-                // If AuthContext is used, this prop might not be needed here.
-                if (setIsAuthenticated) {
-                setIsAuthenticated(true);
-                }
-                handleSuccess('Login successful!'); // Add success notification
-                navigate('/home');
-            } else {
-                const details = error?.details[0]?.message || message || 'Login failed. Please try again.';
-                handleError(details);
-            }
-        } catch (err) {
-            handleError(err.message || 'An unexpected error occurred during login.');
-        }
-    };
+    if (!email || !password) {
+      return handleError('Email et mot de passe requis');
+    }
 
-return (
-        <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "var(--light-gray)" }}
-        >
-        <div
-            className="bg-white p-8 md:p-12 rounded-lg w-full max-w-md shadow-xl"
-            style={{ color: "var(--dark-gray)" }}
-        >
-            <h1 className="text-3xl font-bold mb-8 text-center">
-            <span style={{ color: "var(--primary)" }}>Log in</span> to your
-            account
-            </h1>
+    try {
+      const url = `http://localhost:5000/api/auth/login`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginInfo)
+      });
 
-            <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email Input */}
-            <div className="relative">
-                <input
-                id="email"
-                type="email"
-                name="email"
-                value={loginInfo.email}
-                onChange={handleChange}
-                placeholder=" "
-                className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-                style={{
-                    borderColor: "var(--med-light-gray)",
-                    backgroundColor: "white",
-                }}
-                />
-                <label
-                htmlFor="email"
-                className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-                style={{
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                }}
-                >
-                Email
-                </label>
-                <style>{`
-                input:focus + label,
-                input:not(:placeholder-shown) + label {
-                    top: 0 !important;
-                    left: 0.5rem !important;
-                    font-size: 12px;
-                    color: var(--primary);
-                }
-                input:focus {
-                    border-color: var(--primary);
-                }
-                `}</style>
-            </div>
+      const result = await response.json();
+      const { message, token, user, error } = result;
 
-            {/* Password Input */}
-            <div className="relative">
-                <input
-                id="password"
-                type="password"
-                name="password"
-                value={loginInfo.password}
-                onChange={handleChange}
-                placeholder=" "
-                className="peer w-full border rounded-md px-3 pt-6 pb-2.5 text-base placeholder-transparent focus:outline-none transition-colors duration-150"
-                style={{
-                    borderColor: "var(--med-light-gray)",
-                    backgroundColor: "white",
-                }}
-                />
-                <label
-                htmlFor="password"
-                className="absolute left-2 text-gray text-base transition-all duration-150 pointer-events-none bg-white px-1"
-                style={{
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                }}
-                >
-                Password
-                </label>
-                <style>{`
-                input:focus + label,
-                input:not(:placeholder-shown) + label {
-                    top: 0 !important;
-                    left: 0.5rem !important;
-                    font-size: 12px;
-                    color: var(--primary);
-                }
-                input:focus {
-                    border-color: var(--primary);
-                }
-                `}</style>
-            </div>
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
 
-            <button
-                type="submit"
-                className="w-full text-white font-semibold text-lg rounded-md cursor-pointer py-2.5 transition duration-200 shadow-md hover:shadow-lg"
-                style={{ backgroundColor: "var(--primary)" }}
+        if (setIsAuthenticated) setIsAuthenticated(true);
+        handleSuccess('Connexion réussie !');
+
+        navigate('/home');
+      } else {
+        handleError(error?.details?.[0]?.message || message || 'Échec de connexion.');
+      }
+    } catch (err) {
+      handleError(err.message || 'Erreur inattendue.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-purple-100">
+      <div className="bg-white/70 backdrop-blur-md border border-gray-200 shadow-2xl p-10 rounded-2xl w-full max-w-md">
+        <h1 className="text-3xl font-extrabold text-center text-indigo-700 mb-6">
+          Connexion
+        </h1>
+        <p className="text-center text-gray-600 mb-8">
+          Entrez vos identifiants pour accéder à votre compte
+        </p>
+
+        <form onSubmit={handleLogin} className="space-y-6">
+          {/* Champ Email */}
+          <div className="relative">
+            <Mail className="absolute left-3 top-4 text-gray-400" size={20} />
+            <input
+              id="email"
+              type="email"
+              name="email"
+              value={loginInfo.email}
+              onChange={handleChange}
+              placeholder="Adresse e-mail"
+              className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-3 text-base focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 outline-none transition duration-200"
+            />
+          </div>
+
+          {/* Champ Mot de passe */}
+          <div className="relative">
+            <Lock className="absolute left-3 top-4 text-gray-400" size={20} />
+            <input
+              id="password"
+              type="password"
+              name="password"
+              value={loginInfo.password}
+              onChange={handleChange}
+              placeholder="Mot de passe"
+              className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-3 text-base focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 outline-none transition duration-200"
+            />
+          </div>
+
+          {/* Bouton de connexion */}
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-lg rounded-lg py-3 shadow-lg transform hover:scale-[1.02] transition duration-200"
+          >
+            Se connecter
+          </button>
+
+          {/* Lien vers l'inscription */}
+          <p className="text-center text-gray-600 text-base mt-3">
+            Pas encore de compte ?{' '}
+            <Link
+              to="/signup"
+              className="text-indigo-600 font-semibold hover:underline"
             >
-                Login
-            </button>
+              S'inscrire
+            </Link>
+          </p>
+        </form>
 
-            <p className="text-center text-base mt-2" style={{ color: "var(--gray)" }}>
-                Don’t have an account?{" "}
-                <Link
-                to="/signup"
-                style={{ color: "var(--accent)", fontWeight: "500" }}
-                className="hover:underline"
-                >
-                Signup
-                </Link>
-            </p>
-            </form>
-
-            <ToastContainer />
-        </div>
-        </div>
+        <ToastContainer />
+      </div>
+    </div>
   );
-
 }
 
 export default Login;

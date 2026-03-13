@@ -39,6 +39,7 @@ function Login({ setIsAuthenticated }) {
             if (token) {
                 // Sauvegarder le token dans le localStorage
                 localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user)); 
                 
                 // Mettre à jour l'état d'authentification dans le parent
                 setIsAuthenticated(true);

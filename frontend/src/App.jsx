@@ -3,29 +3,110 @@ import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Home from "./pages/Home.jsx";
 import NotFound from "./components/common/NotFound.jsx";
-import Journaux from "./pages/Journaux.jsx";
-import Compte from "./pages/Compte.jsx";
-
-const PrivateRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('token');
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-}
+import Caisse from "./pages/Caisse.jsx";
+import NatureCharge from "./pages/NatureCharge.jsx";
+import Tier from "./pages/Tier.jsx";
+import Personnel from "./pages/Personnel.jsx";
+import Banque from "./pages/Banque.jsx";
+import VehiculePage from './pages/VehiculePage.jsx';
+import ClientAddPage from './components/Client/ClientAddPage';
+import ClientEditPage from './components/Client/ClientEditPage';
+import Client from './pages/Client';
+import ModifierFournisseur from './components/Fournisseur/ModifierFournisseur.jsx';
+import AjouterFournisseur from './components/Fournisseur/AjouterFournisseur.jsx';
+import Fournisseur from './pages/fournisseur.jsx';
+import MvtCaisse from './pages/mvtCaisse';
+import Journaux from './pages/Journaux.jsx';
+import Transfert from './components/transfertCaisse/TransfertCaisse.jsx';
+import ProfileUser from './pages/ProfileUser.jsx';
+import ProfileImageUpload from './components/profile/ProfileImageUpload.jsx';
+import ProfilePasswordChange from './components/profile/ProfilePasswordChange.jsx';
+import CaisseFormPage from './components/Caisse/CaisseFormPage.jsx';
+import NatureChargeFormPage from './components/NatureDeCharge/NatureChargeFormPage.jsx';
+import Layout from "./components/common/Layout";
+import TierFormPage from './components/Tier/TierFormPage.jsx';
+import ListeTransferts from './components/transfertCaisse/ListeTransferts.jsx';
+import PrivateRoute from "./components/common/PrivateRoute.jsx"; // ✅ Import correct
+import UserCreate from './components/User/UserCreate.jsx';
+import UserList from './components/User/UserList.jsx';
+import UserEdit from './components/User/UserEdit.jsx';
+import Notifications from './components/transfertCaisse/Notifications.jsx';
+import SocieteList from './components/company/SocieteList.jsx';
+import SocieteCreate from './components/company/CreateCompany.jsx';
+import SocieteEdit from './components/company/SocieteEdit.jsx';
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
+      {/* Redirection vers login par défaut */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* Authenticated-like Routes (using PrivateRoute for structure, but no actual auth check here) */}
-      <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-      <Route path="/journaux" element={<PrivateRoute><Journaux /></PrivateRoute>} />
-      <Route path="/compte" element={<PrivateRoute><Compte /></PrivateRoute>} />
+      {/* Protected Routes dans Layout */}
+      <Route 
+        path="/" 
+        element={
+          <PrivateRoute>
+            <Layout />
+          </PrivateRoute>
+        }
+      >
+        <Route path="home" element={<Home />} />
+        <Route path="caisse" element={<Caisse />} />
+        <Route path="nature-charge" element={<NatureCharge />} /> 
+        <Route path="nature-charges/nouveau" element={<NatureChargeFormPage />} />
+        <Route path="nature-charges/:id" element={<NatureChargeFormPage />} />
 
-      {/* unknown paths */}
+        <Route path="tier" element={<Tier />} />
+        <Route path="tiers/nouveau" element={<TierFormPage />} />
+        <Route path="tiers/:id" element={<TierFormPage />} />
+
+        <Route path="personnel" element={<Personnel />} />
+        <Route path="vehicule" element={<VehiculePage />} />
+        <Route path="banque" element={<Banque />} />
+
+        {/* Clients */}
+        <Route path="clients" element={<Client />} />
+        <Route path="clients/add" element={<ClientAddPage />} />
+        <Route path="clients/edit/:id" element={<ClientEditPage />} />
+
+        {/* Fournisseurs */}
+        <Route path="fournisseurs" element={<Fournisseur />} />
+        <Route path="fournisseurs/ajouter" element={<AjouterFournisseur />} />
+        <Route path="fournisseurs/modifier/:id" element={<ModifierFournisseur />} />
+
+        {/* Caisses */}
+        <Route path="caisses/nouveau" element={<CaisseFormPage />} />
+        <Route path="caisses/:id" element={<CaisseFormPage />} />
+
+        {/* Mouvements & Journaux & Transfert */}
+        <Route path="mvt-caisse" element={<MvtCaisse />} />
+        <Route path="journal-caisse" element={<Journaux />} />
+        <Route path="transfert/nouveau" element={<Transfert />} />
+        <Route path="transfert/historique" element={<ListeTransferts />} />
+
+        {/* Profil */}
+        <Route path="profile" element={<ProfileUser />} />
+        <Route path="profile/password" element={<ProfilePasswordChange />} />
+        <Route path="profile/image" element={<ProfileImageUpload />} />
+
+
+        <Route path="/users" element={<PrivateRoute role="super-admin"><UserList /></PrivateRoute>} />
+        <Route path="/users/create" element={<PrivateRoute role="super-admin"><UserCreate /></PrivateRoute>} />
+        <Route path="/users/edit/:id" element={<PrivateRoute role="super-admin"><UserEdit /></PrivateRoute>}/>
+        
+        <Route path="/societes" element={<PrivateRoute role="super-admin"><SocieteList /></PrivateRoute>} />
+        <Route path="/societes/create" element={<PrivateRoute role="super-admin"><SocieteCreate /></PrivateRoute>} />
+        <Route path="/societes/edit/:id" element={<PrivateRoute role="super-admin"><SocieteEdit /></PrivateRoute>}/>
+  
+
+        <Route path="/notifications" element={<Notifications />} />
+      </Route>
+
+      {/* Page Not Found */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

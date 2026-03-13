@@ -1,12 +1,8 @@
-import Layout from '../components/common/Layout'
-import JournalList from '../components/journal/JournalList'
+import JournalCaisse from "../components/journalCaisse/JournalCaisse";
 
 const Journaux = () => {
-    return (
-        <Layout>
-            <JournalList className='mt-[var(--nav-height)]' />
-        </Layout>
-    )
+return (
+<JournalCaisse />
+)
 }
-
 export default Journaux

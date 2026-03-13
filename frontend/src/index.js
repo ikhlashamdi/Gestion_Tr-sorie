@@ -5,12 +5,15 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import 'react-toastify/ReactToastify.css';
+import { UserProvider } from './contexts/UserContext.jsx';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
+     <UserProvider>
       <App />
+      </UserProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #1873cf; 
+  --primary: #4479ce; 
   --primary-light: #5291f6;
   --primary-bg: #9ec2fc;
   --secondary: #059669; 
@@ -58,3 +58,4 @@ body {
 button {
   cursor: pointer;
 }
+
